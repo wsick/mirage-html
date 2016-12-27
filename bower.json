@@ -1,0 +1,35 @@
+{
+  "name": "mirage-svg",
+  "main": "dist/mirage-svg.js",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/wsick/mirage-svg"
+  },
+  "authors": [
+    "BSick7 <brad.sickles@gmail.com>"
+  ],
+  "description": "SVG binding adapter for mirage",
+  "keywords": [
+    "mirage",
+    "svg"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "build",
+    "node_modules",
+    "lib",
+    "stress",
+    "test",
+    "typings",
+    "package.json",
+    "Gruntfile.js"
+  ],
+  "devDependencies": {
+    "qunit": "~1.15.0"
+  },
+  "dependencies": {
+    "mirage": "https://github.com/wsick/mirage.git"
+  }
+}
