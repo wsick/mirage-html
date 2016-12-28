@@ -1,1 +1,1 @@
-mirage-svg
+mirage-html
