@@ -15,7 +15,7 @@ module.exports = function (config) {
 
         // list of files / patterns to load in the browser
         files: [
-            'lib/mirage-svg/dist/mirage-svg.js',
+            'lib/mirage-html/dist/mirage-html.js',
             '.build/tests/**/*.js'
         ],
 

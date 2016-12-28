@@ -1,6 +1,6 @@
 var fs = require('fs'),
     meta = {
-        name: 'mirage-svg',
+        name: 'mirage-html',
         buildfiles: [
             'typings/**/*.d.ts',
             'src/_version.ts',

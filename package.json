@@ -1,29 +1,29 @@
 {
-  "name": "mirage-svg",
+  "name": "mirage-html",
   "version": "0.1.0",
-  "description": "SVG binding adapter for mirage",
-  "main": "Gruntfile.js",
+  "description": "HTML binding adapter for mirage",
+  "main": "gulpfile.js",
   "directories": {
     "doc": "docs",
     "test": "test"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "gulp test"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/wsick/mirage-svg.git"
+    "url": "git://github.com/wsick/mirage-html.git"
   },
   "keywords": [
-    "xaml",
-    "fayde"
+    "mirage",
+    "html"
   ],
   "author": "Brad Sickles <brad.sickles@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/wsick/mirage-svg/issues"
+    "url": "https://github.com/wsick/mirage-html/issues"
   },
-  "homepage": "https://github.com/wsick/mirage-svg",
+  "homepage": "https://github.com/wsick/mirage-html",
   "devDependencies": {
     "del": "^1.2.0",
     "fayde-unify": "~0.4.0",
