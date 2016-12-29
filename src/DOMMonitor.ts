@@ -14,15 +14,15 @@ namespace mirage.html {
         (added: Element[], removed: Element[]): void;
     }
 
-    export function NewDOMMonitor(target: Node, onUpdate: INodeMonitorUpdate): IDOMMonitor {
-        function isMirageElement(node: Node): boolean {
-            // Only consider element nodes
-            // Only consider nodes with 'data-layout'
-            // Attribute monitor will pick up added/removed attribute
-            return node.nodeType === node.ELEMENT_NODE
-                && !!(<Element>node).getAttribute("data-layout");
-        }
+    export function isMirageElement(node: Node): boolean {
+        // Only consider element nodes
+        // Only consider nodes with 'data-layout'
+        // Attribute monitor will pick up added/removed attribute
+        return node.nodeType === node.ELEMENT_NODE
+            && !!(<Element>node).getAttribute("data-layout");
+    }
 
+    export function NewDOMMonitor(target: Node, onUpdate: INodeMonitorUpdate): IDOMMonitor {
         var observer = new MutationObserver(mutations => {
             var added: Element[] = [];
             var removed: Element[] = [];

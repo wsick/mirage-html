@@ -53,12 +53,13 @@ namespace mirage.html {
             }
         }
 
-        function adjustDestroy(destroyedRoots: core.LayoutNode[]) {
+        function adjustDestroyed(destroyedRoots: core.LayoutNode[]) {
             for (var i = 0; i < binders.length; i++) {
                 let binder = binders[i];
                 let index = destroyedRoots.indexOf(binder.getRoot());
                 if (index > -1) {
                     // Root was destroyed, let's destroy this binder
+                    binder.setRoot(null);
                     binders.splice(index, 1);
                     i--;
                 }
@@ -69,7 +70,7 @@ namespace mirage.html {
             update(addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
                 let missingBinderNodes = hoist(addedRoots);
                 create(missingBinderNodes);
-                adjustDestroy(destroyedRoots);
+                adjustDestroyed(destroyedRoots);
             },
         };
     }

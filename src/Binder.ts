@@ -40,8 +40,13 @@ namespace mirage.html {
             setRoot(node: core.LayoutNode) {
                 Size.undef(lastDraftSize);
                 root = node;
-                element = tree.getElementByNode(root);
-                drafter = draft.NewDrafter(root);
+                if (!node) {
+                    element = null;
+                    drafter = null;
+                } else {
+                    element = tree.getElementByNode(root);
+                    drafter = draft.NewDrafter(root);
+                }
             },
             run() {
                 var rootSize = getElementSize(element);
