@@ -4,56 +4,55 @@ namespace mirage.html {
         stop();
     }
 
-    export function NewDOMMonitor(target: Node, onNodeAdded: (node: Node, parent: Node) => void, onNodeRemoved: (node: Node, parent: Node) => void): IDOMMonitor {
-        function nodeHasLayoutAttr(node: Node): boolean {
-            return !!(<Element>node).getAttribute("data-layout");
-        }
+    export interface INodeMonitorUpdate {
+        (added: Element[], removed: Element[]): void;
+    }
 
-        function addElement(node: Node, parent: Node) {
+    export function NewDOMMonitor(target: Node, onUpdate: INodeMonitorUpdate): IDOMMonitor {
+        function isMirageElement(node: Node): boolean {
             // Only consider element nodes
-            if (node.nodeType !== node.ELEMENT_NODE)
-                return;
             // Only consider nodes with 'data-layout'
-            // Attribute monitor will pick up added nodes that add attr later
-            if (!nodeHasLayoutAttr(node))
-                return;
-            onNodeAdded(node, parent);
-        }
-
-        function removeElement(node: Node, parent: Node) {
-            // Only consider element nodes
-            if (node.nodeType !== node.ELEMENT_NODE)
-                return;
-            // Only consider nodes with 'data-layout'
-            // Attribute monitor will pick up removed nodes that previously remove attr
-            if (!nodeHasLayoutAttr(node))
-                return;
-            onNodeRemoved(node, parent);
+            // Attribute monitor will pick up added/removed attribute
+            return node.nodeType === node.ELEMENT_NODE
+                && !!(<Element>node).getAttribute("data-layout");
         }
 
         var observer = new MutationObserver(mutations => {
+            var added: Element[] = [];
+            var removed: Element[] = [];
+
             for (var i = 0; i < mutations.length; i++) {
                 let mutation = mutations[i];
                 if (mutation.type === "childList") {
                     for (var j = 0; j < mutation.addedNodes.length; j++) {
-                        addElement(mutation.addedNodes[j], mutation.target);
+                        let el = mutation.addedNodes[j];
+                        if (isMirageElement(el)) {
+                            added.push(<Element>el);
+                        }
                     }
                     for (var j = 0; j < mutation.removedNodes.length; j++) {
-                        removeElement(mutation.removedNodes[j], mutation.target);
+                        let el = mutation.removedNodes[j];
+                        if (isMirageElement(el)) {
+                            removed.push(<Element>el);
+                        }
                     }
                 } else if (mutation.type === "attributes") {
                     if (!mutation.oldValue) {
-                        if (nodeHasLayoutAttr(mutation.target)) {
+                        if (isMirageElement(mutation.target)) {
                             // 'data-layout' attribute added
-                            addElement(mutation.target, mutation.target.parentElement);
+                            added.push(<Element>mutation.target);
                         }
                     } else {
-                        if (!nodeHasLayoutAttr(mutation.target)) {
+                        if (!isMirageElement(mutation.target)) {
                             // 'data-layout' attribute removed
-                            removeElement(mutation.target, mutation.target.parentElement);
+                            removed.push(<Element>mutation.target);
                         }
                     }
                 }
+            }
+
+            if (added.length > 0 || removed.length > 0) {
+                onUpdate(added, removed);
             }
         });
 

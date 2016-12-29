@@ -20,7 +20,7 @@ module.exports = function (meta) {
                 outDir: 'stress/.build/',
                 pathFilter: {'stress': ''}
             }))
-            .pipe(sourcemaps.write('./', {sourceRoot: '/', debug: true}))
+            .pipe(sourcemaps.write('./', {sourceRoot: `/${meta.name}/`, debug: true}))
             .pipe(gulp.dest('stress/.build/'))
             .pipe(connect.reload());
     });

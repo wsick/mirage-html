@@ -1,0 +1,1 @@
+/// <reference path="../lib/mirage/dist/mirage.d.ts" />

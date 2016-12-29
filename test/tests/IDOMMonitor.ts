@@ -7,11 +7,13 @@ namespace mirage.html.tests {
         var monitorRoot = document.createElement('div');
         monitorRoot.id = "IDOMMonitor-root1";
         document.body.appendChild(monitorRoot);
-        var added: Node[] = [];
-        var removed: Node[] = [];
+        var added: Element[] = [];
+        var removed: Element[] = [];
         var monitor = NewDOMMonitor(monitorRoot,
-            (node, parent) => added.push(node),
-            (node, parent) => removed.push(node));
+            (newEls, oldEls) => {
+                added = added.concat(newEls);
+                removed = removed.concat(oldEls);
+            });
         monitor.start();
 
         var nonMirageNode1 = document.createElement('div');
@@ -42,11 +44,13 @@ namespace mirage.html.tests {
         var monitorRoot = document.createElement('div');
         monitorRoot.id = "IDOMMonitor-root2";
         document.body.appendChild(monitorRoot);
-        var added: Node[] = [];
-        var removed: Node[] = [];
+        var added: Element[] = [];
+        var removed: Element[] = [];
         var monitor = NewDOMMonitor(monitorRoot,
-            (node, parent) => added.push(node),
-            (node, parent) => removed.push(node));
+            (newEls, oldEls) => {
+                added = added.concat(newEls);
+                removed = removed.concat(oldEls);
+            });
         monitor.start();
 
         var lateNode1 = document.createElement('div');
