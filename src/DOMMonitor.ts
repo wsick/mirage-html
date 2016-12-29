@@ -1,4 +1,10 @@
 namespace mirage.html {
+    /*
+     The DOM Monitor is intended to watch the entire DOM and filter for mirage-tagged elements.
+     It will report nodes added and removed as a result of DOM tree and attribute changes.
+     For instance, if someone deletes the `data-layout` attribute from a DOM node, it will be reported as removed.
+     */
+
     export interface IDOMMonitor {
         start();
         stop();

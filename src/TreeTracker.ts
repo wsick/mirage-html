@@ -1,6 +1,7 @@
 namespace mirage.html {
     /*
-     The SyncLookup tracks render elements (DOM) and layout nodes (mirage).
+     The Tree Tracker tracks render elements (DOM) and layout nodes (mirage).
+     This is a singleton and tracks the entire DOM.
      Instead of doing lookups using a synchronized double-array, we are tracking a uid on each object.
      The render element and layout node can be retrieved by uid.
      We use a DOM attribute ('http://schemas.wsick.com/mirage/html':uid)
@@ -15,6 +16,7 @@ namespace mirage.html {
         removeElement(el: Element);
         elementExists(el: Element): boolean;
         getNodeByElement(el: Element): core.LayoutNode;
+        getElementByNode(node: core.LayoutNode): Element;
     }
 
     interface IElementHash {
@@ -56,6 +58,10 @@ namespace mirage.html {
             getNodeByElement(el: Element): core.LayoutNode {
                 var uid = el.getAttributeNS(XMLNS, "uid");
                 return nodes[uid];
+            },
+            getElementByNode(node: core.LayoutNode): Element {
+                var uid = node.getAttached("mirage-uid");
+                return elements[uid];
             },
         };
     }
