@@ -27,7 +27,7 @@
     "gulpfile.js"
   ],
   "devDependencies": {
-    "qunit": "~1.15.0"
+    "qunit": "^2.1.0"
   },
   "dependencies": {
     "mirage": "https://github.com/wsick/mirage.git"
