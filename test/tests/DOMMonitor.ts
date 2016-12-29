@@ -1,11 +1,11 @@
 namespace mirage.html.tests {
-    QUnit.module("IDOMMonitor");
+    QUnit.module("DOMMonitor");
 
     QUnit.test("add+remove", (assert) => {
         var done = assert.async();
 
         var monitorRoot = document.createElement('div');
-        monitorRoot.id = "IDOMMonitor-root1";
+        monitorRoot.id = "DOMMonitor-root1";
         document.body.appendChild(monitorRoot);
         var added: Element[] = [];
         var removed: Element[] = [];
@@ -42,7 +42,7 @@ namespace mirage.html.tests {
         var done = assert.async();
 
         var monitorRoot = document.createElement('div');
-        monitorRoot.id = "IDOMMonitor-root2";
+        monitorRoot.id = "DOMMonitor-root2";
         document.body.appendChild(monitorRoot);
         var added: Element[] = [];
         var removed: Element[] = [];
