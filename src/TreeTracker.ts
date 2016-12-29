@@ -10,12 +10,11 @@ namespace mirage.html {
 
     var XMLNS = "http://schemas.wsick.com/mirage/html";
 
-    export interface ISyncLookup {
+    export interface ITreeTracker {
         add(el: Element, node: core.LayoutNode): string;
         removeElement(el: Element);
         elementExists(el: Element): boolean;
         getNodeByElement(el: Element): core.LayoutNode;
-        getNodeUid(node: core.LayoutNode): string;
     }
 
     interface IElementHash {
@@ -25,7 +24,7 @@ namespace mirage.html {
         [uid: string]: core.LayoutNode;
     }
 
-    export function NewSyncLookup(): ISyncLookup {
+    export function NewTreeTracker(): ITreeTracker {
         var elements: IElementHash = {};
         var nodes: ILayoutNodeHash = {};
         var lastUid = 0;
@@ -58,9 +57,10 @@ namespace mirage.html {
                 var uid = el.getAttributeNS(XMLNS, "uid");
                 return nodes[uid];
             },
-            getNodeUid(node: core.LayoutNode): string {
-                return node.getAttached("mirage-uid");
-            },
         };
+    }
+
+    export function getNodeUid(node: core.LayoutNode): string {
+        return node.getAttached("mirage-uid");
     }
 }
