@@ -25,16 +25,37 @@
      */
 
     var observer = new MutationObserver(mutations => {
-        console.log(mutations);
+        for (var i = 0; i < mutations.length; i++) {
+            let mutation = mutations[i];
+            if (mutation.type !== "childList")
+                continue;
+            for (var j = 0; j < mutation.addedNodes.length; j++) {
+                console.log("added", mutation.addedNodes[j]);
+            }
+            for (var j = 0; j < mutation.removedNodes.length; j++) {
+                console.log("removed", mutation.removedNodes[j], mutation.target);
+            }
+        }
     });
+    observer.observe(document.body, {childList: true, subtree: true});
 
     window.setTimeout(() => {
-        observer.observe(document.body, {childList: true, subtree: true});
         var root = document.getElementById('root');
+
         console.log("Adding child to root...");
-        root.appendChild(document.createElement('div'));
+        var child1 = document.createElement('div');
+        child1.id = "child-1";
+        root.appendChild(child1);
+
         console.log("Adding grandchild to root child...");
-        root.children[0].appendChild(document.createElement('div'));
+        var grandchild1 = document.createElement('div');
+        grandchild1.id = "grandchild-1";
+        root.children[0].appendChild(grandchild1);
+
+        window.setTimeout(() => {
+            console.log("Removing grandchild from root child...");
+            root.children[0].removeChild(grandchild1);
+        }, 1);
     }, 1);
 </script>
 </body>
