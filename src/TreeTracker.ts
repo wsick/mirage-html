@@ -37,6 +37,7 @@ namespace mirage.html {
                 var uid = lastUid.toString();
                 el.setAttributeNS(XMLNS, "uid", uid);
                 node.setAttached("mirage-uid", uid);
+                elements[uid] = el;
                 nodes[uid] = node;
                 return uid;
             },

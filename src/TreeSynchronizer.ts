@@ -10,9 +10,9 @@ namespace mirage.html {
         stop();
     }
 
-    export function NewTreeSynchronizer(target: Node): ITreeSynchronizer {
-        var tree = NewTreeTracker();
-        var registry = NewBinderRegistry(tree);
+    export function NewTreeSynchronizer(target: Node, tree?: ITreeTracker, registry?: IBinderRegistry): ITreeSynchronizer {
+        tree = tree || NewTreeTracker();
+        registry = registry || NewBinderRegistry(tree);
 
         function create(added: Element[]) {
             // Mirror new render elements to layout tree
