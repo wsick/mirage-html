@@ -9,8 +9,8 @@ namespace mirage.html {
         update(addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]);
     }
 
-    export function NewBinderRegistry(tree: ITreeTracker): IBinderRegistry {
-        let binders: IBinder[] = [];
+    export function NewBinderRegistry(tree: ITreeTracker, binders?: IBinder[]): IBinderRegistry {
+        binders = binders || [];
 
         function hoist(addedRoots: core.LayoutNode[]): core.LayoutNode[] {
             // Hoist binders to the root
