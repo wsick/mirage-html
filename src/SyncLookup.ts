@@ -1,0 +1,66 @@
+namespace mirage.html {
+    /*
+     The SyncLookup tracks render elements (DOM) and layout nodes (mirage).
+     Instead of doing lookups using a synchronized double-array, we are tracking a uid on each object.
+     The render element and layout node can be retrieved by uid.
+     We use a DOM attribute ('http://schemas.wsick.com/mirage/html':uid)
+     and a layout node attached property ('mirage-uid') to track the uid.
+     This uid is a running int counter that is converted to a string to match attributes.
+     */
+
+    var XMLNS = "http://schemas.wsick.com/mirage/html";
+
+    export interface ISyncLookup {
+        add(el: Element, node: core.LayoutNode): string;
+        removeElement(el: Element);
+        elementExists(el: Element): boolean;
+        getNodeByElement(el: Element): core.LayoutNode;
+        getNodeUid(node: core.LayoutNode): string;
+    }
+
+    interface IElementHash {
+        [uid: string]: Element;
+    }
+    interface ILayoutNodeHash {
+        [uid: string]: core.LayoutNode;
+    }
+
+    export function NewSyncLookup(): ISyncLookup {
+        var elements: IElementHash = {};
+        var nodes: ILayoutNodeHash = {};
+        var lastUid = 0;
+
+        return {
+            add(el: Element, node: core.LayoutNode): string {
+                lastUid++;
+                var uid = lastUid.toString();
+                el.setAttributeNS(XMLNS, "uid", uid);
+                node.setAttached("mirage-uid", uid);
+                nodes[uid] = node;
+                return uid;
+            },
+            removeElement(el: Element): core.LayoutNode {
+                var uid = el.getAttributeNS(XMLNS, "uid");
+                var node = !uid ? null : nodes[uid];
+                el.removeAttributeNS(XMLNS, "uid");
+                if (node) {
+                    node.setAttached("mirage-uid", undefined);
+                    delete elements[uid];
+                    delete nodes[uid];
+                }
+                return node;
+            },
+            elementExists(el: Element): boolean {
+                var uid = el.getAttributeNS(XMLNS, "uid");
+                return elements[uid] === el;
+            },
+            getNodeByElement(el: Element): core.LayoutNode {
+                var uid = el.getAttributeNS(XMLNS, "uid");
+                return nodes[uid];
+            },
+            getNodeUid(node: core.LayoutNode): string {
+                return node.getAttached("mirage-uid");
+            },
+        };
+    }
+}
