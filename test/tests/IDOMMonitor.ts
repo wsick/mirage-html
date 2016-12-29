@@ -9,7 +9,7 @@ namespace mirage.html.tests {
         document.body.appendChild(monitorRoot);
         var added: Node[] = [];
         var removed: Node[] = [];
-        var monitor = mirage.html.sync.NewDOMMonitor(monitorRoot,
+        var monitor = NewDOMMonitor(monitorRoot,
             (node, parent) => added.push(node),
             (node, parent) => removed.push(node));
         monitor.start();
@@ -44,7 +44,7 @@ namespace mirage.html.tests {
         document.body.appendChild(monitorRoot);
         var added: Node[] = [];
         var removed: Node[] = [];
-        var monitor = mirage.html.sync.NewDOMMonitor(monitorRoot,
+        var monitor = NewDOMMonitor(monitorRoot,
             (node, parent) => added.push(node),
             (node, parent) => removed.push(node));
         monitor.start();

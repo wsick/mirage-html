@@ -1,4 +1,4 @@
-namespace mirage.html.sync {
+namespace mirage.html {
     export interface IDOMMonitor {
         start();
         stop();
