@@ -2,7 +2,7 @@ namespace mirage.html {
     /*
      The DOM Monitor is intended to watch the entire DOM and filter for mirage-tagged elements.
      It will report nodes added and removed as a result of DOM tree and attribute changes.
-     For instance, if someone deletes the `data-layout` attribute from a DOM node, it will be reported as removed.
+     For instance, if someone deletes the `data-layout` attribute from a DOM element, it will be reported as removed.
      */
 
     export interface IDOMMonitor {
@@ -11,7 +11,7 @@ namespace mirage.html {
     }
 
     export interface INodeMonitorUpdate {
-        (added: Element[], removed: Element[]): void;
+        (added: Element[], removed: Element[], untagged: Element[]): void;
     }
 
     export function isMirageElement(node: Node): boolean {
@@ -26,6 +26,7 @@ namespace mirage.html {
         var observer = new MutationObserver(mutations => {
             var added: Element[] = [];
             var removed: Element[] = [];
+            var untagged: Element[] = [];
 
             for (var i = 0; i < mutations.length; i++) {
                 let mutation = mutations[i];
@@ -51,14 +52,14 @@ namespace mirage.html {
                     } else {
                         if (!isMirageElement(mutation.target)) {
                             // 'data-layout' attribute removed
-                            removed.push(<Element>mutation.target);
+                            untagged.push(<Element>mutation.target);
                         }
                     }
                 }
             }
 
-            if (added.length > 0 || removed.length > 0) {
-                onUpdate(added, removed);
+            if (added.length > 0 || removed.length > 0 || untagged.length > 0) {
+                onUpdate(added, removed, untagged);
             }
         });
 

@@ -5,6 +5,11 @@ namespace mirage.html {
      It also detects mirage roots and builds binders.
      */
 
+    // TODO: We are currently using setParent to configure layout tree
+    // Instead, we should either
+    // - add child to Panel
+    // - set single child if node type allows it
+
     export interface ITreeSynchronizer {
         start();
         stop();
@@ -14,67 +19,97 @@ namespace mirage.html {
         tree = tree || NewTreeTracker();
         registry = registry || NewBinderRegistry(tree);
 
-        function create(added: Element[]) {
+        function mirrorAdded(added: Element[]) {
             // Mirror new render elements to layout tree
             for (var i = 0; i < added.length; i++) {
-                let el = added[i];
-                if (!tree.elementExists(el)) {
-                    // The parent may not be mirrored in the layout tree yet
-                    // We will set parent after all adds/removes have completed
-                    // TODO: get node type
-                    let node = mirage.createNodeByType("...");
-                    tree.add(el, node);
-                }
+                register(added[i]);
             }
         }
 
-        function destroy(removed: Element[], addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
+        function mirrorUntagged(untagged: Element[], addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
+            // Mirror nodes that have been untagged, but remain in DOM
+            for (var i = 0; i < untagged.length; i++) {
+                deregister(untagged[i], true, addedRoots, destroyedRoots);
+            }
+        }
+
+        function mirrorRemoved(removed: Element[], addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
             // Mirror old render elements from layout tree
             // Adds nodes to addedRoots that were orphaned by destroying a root
             // Adds nodes to destroyedRoots that were destroyed mirage parents
             for (var i = 0; i < removed.length; i++) {
-                let el = removed[i];
-                let node = tree.removeElement(el);
-                if (node) {
-                    if (!node.tree.parent) {
-                        // A binder attached to this node needs adjusted
-                        destroyedRoots.push(node);
-                        if (el.parentElement) {
-                            // Having a parentElement indicates it is in the DOM
-                            // Since this was "untagged" with mirage, we need to promote child nodes to roots
-                            promoteChildren(el, addedRoots);
-                        }
-                    }
-                    node.setParent(null);
-                }
+                deregister(removed[i], false, addedRoots, destroyedRoots);
             }
         }
 
+        function register(el: Element) {
+            if (tree.elementExists(el) || !isMirageElement(el))
+                return;
+            // The parent may not be mirrored in the layout tree yet
+            // We will set parent after all adds/removes have completed
+            // TODO: get node type
+            let node = mirage.createNodeByType("...");
+            tree.add(el, node);
+
+            // register children
+            for (let cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
+                register(cur);
+            }
+        }
+
+        function deregister(el: Element, isUntagged: boolean, addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
+            let node = tree.removeElement(el);
+            if (!node)
+                return;
+            if (!isUntagged) {
+                // deregister children
+                for (let cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
+                    deregister(cur, true, null, null);
+                }
+            }
+
+            if (!node.tree.parent) {
+                destroyedRoots.push(node);
+                promoteChildren(el, addedRoots);
+            }
+
+            node.setParent(null);
+        }
+
         function promoteChildren(el: Element, addedRoots: core.LayoutNode[]) {
-            let cur = el.firstElementChild;
-            while (cur) {
+            for (let cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
                 if (isMirageElement(cur)) {
                     addedRoots.push(tree.getNodeByElement(cur));
                 } else {
                     promoteChildren(cur, addedRoots);
                 }
-                cur = cur.nextElementSibling;
             }
         }
 
-        function configParents(added: Element[], addedRoots: core.LayoutNode[]) {
+        function mirrorAncestry(added: Element[], addedRoots: core.LayoutNode[]) {
             // Configure parents after all layout nodes have been created/destroyed
             // This is done to ensure parent layout nodes exist
             // Adds nodes to addedRoots that do not have mirage parents
             for (var i = 0; i < added.length; i++) {
                 let el = added[i];
                 let node = tree.getNodeByElement(el);
-                if (el.parentElement && node) {
-                    // coerce 'none' types to null
-                    node.setParent(tree.getNodeByElement(el.parentElement) || null);
-                }
-                if (node && !node.tree.parent) {
+                if (!node)
+                    continue;
+                // coerce 'none' to null
+                node.setParent((el.parentElement ? tree.getNodeByElement(el.parentElement) : null) || null);
+                if (!node.tree.parent) {
                     addedRoots.push(node);
+                }
+                configAncestors(el, node);
+            }
+        }
+
+        function configAncestors(parentEl: Element, parentNode: core.LayoutNode) {
+            for (let cur = parentEl.firstElementChild; !!cur; cur = cur.nextElementSibling) {
+                let curNode = tree.getNodeByElement(cur);
+                if (curNode && !curNode.tree.parent) {
+                    curNode.setParent(parentNode);
+                    configAncestors(cur, curNode);
                 }
             }
         }
@@ -87,13 +122,14 @@ namespace mirage.html {
          - hoist binders to the true root
          - add binders for new root nodes
          */
-        function update(added: Element[], removed: Element[]) {
+        function update(added: Element[], removed: Element[], untagged: Element[]) {
             let addedRoots: core.LayoutNode[] = [];
             let destroyedRoots: core.LayoutNode[] = [];
 
-            create(added);
-            destroy(removed, destroyedRoots, addedRoots);
-            configParents(added, addedRoots);
+            mirrorAdded(added);
+            mirrorUntagged(untagged, addedRoots, destroyedRoots);
+            mirrorRemoved(removed, addedRoots, destroyedRoots);
+            mirrorAncestry(added, addedRoots);
 
             registry.update(addedRoots, destroyedRoots);
         }
