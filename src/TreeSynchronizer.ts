@@ -100,7 +100,7 @@ namespace mirage.html {
                 if (parentNode instanceof Panel) {
                     // To ensure proper ordering, we will collect all new children for each parent
                     // We will insert the children in sorted order
-                    inserter.track(parentNode, el, node);
+                    inserter.add(parentNode, el, node);
                 } else {
                     node.setParent(parentNode);
                 }
@@ -116,7 +116,7 @@ namespace mirage.html {
                 let curNode = tree.getNodeByElement(cur);
                 if (curNode && !curNode.tree.parent) {
                     if (parentNode instanceof Panel) {
-                        inserter.track(parentNode, cur, curNode);
+                        inserter.add(parentNode, cur, curNode);
                     } else {
                         curNode.setParent(parentNode);
                     }

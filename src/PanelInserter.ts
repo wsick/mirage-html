@@ -6,7 +6,7 @@ namespace mirage.html {
      */
 
     export interface IPanelInserter {
-        track(panel: Panel, el: Element, node: core.LayoutNode);
+        add(panel: Panel, el: Element, node: core.LayoutNode);
         commit();
     }
 
@@ -23,12 +23,12 @@ namespace mirage.html {
         var items: IPanelInsertItem[] = [];
 
         return {
-            track(panel: Panel, el: Element, node: core.LayoutNode) {
+            add(panel: Panel, el: Element, node: core.LayoutNode) {
                 let item = panel.getAttached("html-sync-escrow");
                 if (!item) {
                     item = {
                         panel: panel,
-                        items: [],
+                        entries: [],
                     };
                     panel.setAttached("html-sync-escrow", item);
                     items.push(item);
