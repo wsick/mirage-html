@@ -9,6 +9,35 @@ var mirage;
 (function (mirage) {
     var html;
     (function (html) {
+        function NewAnimClock(onFrame) {
+            var enabled = false;
+            var last = NaN;
+            function tick(now) {
+                if (!enabled)
+                    return;
+                onFrame(now, isNaN(last) ? 0 : now - last);
+                last = now;
+                if (enabled)
+                    window.requestAnimationFrame(tick);
+            }
+            return {
+                enable: function () {
+                    enabled = true;
+                    window.requestAnimationFrame(tick);
+                },
+                disable: function () {
+                    enabled = false;
+                    last = NaN;
+                },
+            };
+        }
+        html.NewAnimClock = NewAnimClock;
+    })(html = mirage.html || (mirage.html = {}));
+})(mirage || (mirage = {}));
+var mirage;
+(function (mirage) {
+    var html;
+    (function (html) {
         function NewBinder(tree) {
             var root;
             var element;
@@ -195,6 +224,78 @@ var mirage;
 })(mirage || (mirage = {}));
 var mirage;
 (function (mirage) {
+    var orchestrator;
+    function watchDOM(target) {
+        target = target || document.body;
+        orchestrator = mirage.html.NewOrchestrator(target);
+        orchestrator.start();
+    }
+    mirage.watchDOM = watchDOM;
+    function getRoots() {
+        return orchestrator.binders.map(function (binder) { return binder.getRoot(); });
+    }
+    mirage.getRoots = getRoots;
+    function getLayoutNode(obj) {
+        var el;
+        if (typeof obj === "string") {
+            el = document.getElementById(obj);
+        }
+        else {
+            el = obj;
+        }
+        return el ? orchestrator.tree.getNodeByElement(el) : null;
+    }
+    mirage.getLayoutNode = getLayoutNode;
+    function dumpLayoutTree(root, indent) {
+        var s = "";
+        if (!indent) {
+            s += "\n";
+            indent = "";
+        }
+        var ctor = root.constructor;
+        s += indent + ctor.name.toString() + "\n";
+        for (var walker = root.tree.walk(); walker.step();) {
+            s += dumpLayoutTree(walker.current, indent + "  ");
+        }
+        return s;
+    }
+    mirage.dumpLayoutTree = dumpLayoutTree;
+})(mirage || (mirage = {}));
+var mirage;
+(function (mirage) {
+    var html;
+    (function (html) {
+        function NewOrchestrator(target) {
+            var tree = html.NewTreeTracker();
+            var binders = [];
+            var registry = html.NewBinderRegistry(tree, binders);
+            var sync = html.NewTreeSynchronizer(target, tree, registry);
+            var clock = html.NewAnimClock(onFrame);
+            function onFrame(now, delta) {
+                for (var i = 0; i < binders.length; i++) {
+                    binders[i].run();
+                }
+            }
+            return {
+                tree: tree,
+                binders: binders,
+                registry: registry,
+                sync: sync,
+                start: function () {
+                    sync.start(true);
+                    clock.enable();
+                },
+                stop: function () {
+                    clock.disable();
+                    sync.stop();
+                },
+            };
+        }
+        html.NewOrchestrator = NewOrchestrator;
+    })(html = mirage.html || (mirage.html = {}));
+})(mirage || (mirage = {}));
+var mirage;
+(function (mirage) {
     var html;
     (function (html) {
         function NewPanelInserter() {
@@ -222,8 +323,13 @@ var mirage;
                         var entries = item.entries;
                         panel.setAttached("html-sync-escrow", undefined);
                         entries.sort(function (a, b) { return a.index - b.index; });
+                        var inserted = [];
                         for (var j = 0; j < entries.length; j++) {
-                            panel.insertChild(entries[j].node, entries[j].index);
+                            var entry = entries[j];
+                            if (inserted.indexOf(entry.node) > -1)
+                                continue;
+                            inserted.push(entry.node);
+                            panel.insertChild(entry.node, entry.index);
                         }
                     }
                 },
@@ -257,7 +363,7 @@ var mirage;
             function register(el) {
                 if (tree.elementExists(el) || !html.isMirageElement(el))
                     return;
-                var node = mirage.createNodeByType("...");
+                var node = mirage.createNodeByType("panel");
                 tree.add(el, node);
                 for (var cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
                     register(cur);
@@ -338,9 +444,24 @@ var mirage;
                 inserter.commit();
                 registry.update(addedRoots, destroyedRoots);
             }
+            function init() {
+                var added = [];
+                scan(target, added, false);
+                update(added, [], []);
+            }
+            function scan(el, added, parentIsMirage) {
+                var isMirage = html.isMirageElement(el);
+                if (isMirage && !parentIsMirage)
+                    added.push(el);
+                for (var cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
+                    scan(cur, added, isMirage);
+                }
+            }
             var monitor = html.NewDOMMonitor(target, update);
             return {
-                start: function () {
+                start: function (initialize) {
+                    if (initialize)
+                        init();
                     monitor.start();
                 },
                 stop: function () {
