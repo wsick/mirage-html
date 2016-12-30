@@ -3,10 +3,10 @@
 <head>
     <meta charset='UTF-8'/>
     <title>Page Layout Example</title>
-    <script src="lib/mirage/dist/mirage.min.js"></script>
-    <script src="lib/mirage-html/dist/mirage-html.min.js"></script>
+    <script src="lib/mirage/dist/mirage.js"></script>
+    <script src="lib/mirage-html/dist/mirage-html.js"></script>
 </head>
-<body style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
+<body onload="mirage.watchDOM()" style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
 <div data-layout="type: grid; column-definitions: 100 *; row-definitions: 100 * auto;">
     <div id="header" data-layout="type: none; grid.column-span: 2;" style="background-color: darkblue; color: white; font-size: 20px;">
         Page Layout

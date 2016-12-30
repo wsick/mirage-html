@@ -11,7 +11,8 @@ module.exports = function (meta) {
         del([
             './lib',
             './test/lib',
-            './stress/lib'
+            './stress/lib',
+            './examples/lib'
         ], cb);
     });
 
