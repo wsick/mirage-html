@@ -46,8 +46,14 @@ namespace mirage.html {
                     let entries = item.entries;
                     panel.setAttached("html-sync-escrow", undefined);
                     entries.sort((a, b) => a.index - b.index);
+                    let inserted: core.LayoutNode[] = [];
                     for (var j = 0; j < entries.length; j++) {
-                        panel.insertChild(entries[j].node, entries[j].index);
+                        let entry = entries[j];
+                        // deduplicate entries
+                        if (inserted.indexOf(entry.node) > -1)
+                            continue;
+                        inserted.push(entry.node);
+                        panel.insertChild(entry.node, entry.index);
                     }
                 }
             },
