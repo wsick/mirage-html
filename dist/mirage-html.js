@@ -200,12 +200,12 @@ var mirage;
         function NewPanelInserter() {
             var items = [];
             return {
-                track: function (panel, el, node) {
+                add: function (panel, el, node) {
                     var item = panel.getAttached("html-sync-escrow");
                     if (!item) {
                         item = {
                             panel: panel,
-                            items: [],
+                            entries: [],
                         };
                         panel.setAttached("html-sync-escrow", item);
                         items.push(item);
@@ -302,7 +302,7 @@ var mirage;
                         continue;
                     var parentNode = (el.parentElement ? tree.getNodeByElement(el.parentElement) : null) || null;
                     if (parentNode instanceof mirage.Panel) {
-                        inserter.track(parentNode, el, node);
+                        inserter.add(parentNode, el, node);
                     }
                     else {
                         node.setParent(parentNode);
@@ -318,7 +318,7 @@ var mirage;
                     var curNode = tree.getNodeByElement(cur);
                     if (curNode && !curNode.tree.parent) {
                         if (parentNode instanceof mirage.Panel) {
-                            inserter.track(parentNode, cur, curNode);
+                            inserter.add(parentNode, cur, curNode);
                         }
                         else {
                             curNode.setParent(parentNode);

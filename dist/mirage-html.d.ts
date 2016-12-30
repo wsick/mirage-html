@@ -28,7 +28,7 @@ declare namespace mirage.html {
 }
 declare namespace mirage.html {
     interface IPanelInserter {
-        track(panel: Panel, el: Element, node: core.LayoutNode): any;
+        add(panel: Panel, el: Element, node: core.LayoutNode): any;
         commit(): any;
     }
     function NewPanelInserter(): IPanelInserter;
