@@ -6,7 +6,7 @@ namespace mirage.html {
      */
 
     export interface ITreeSynchronizer {
-        start();
+        start(initialize: boolean);
         stop();
     }
 
@@ -147,9 +147,25 @@ namespace mirage.html {
             registry.update(addedRoots, destroyedRoots);
         }
 
+        function init() {
+            let added: Element[] = [];
+            scan(<Element>target, added);
+            update(added, [], []);
+        }
+
+        function scan(el: Element, added: Element[]) {
+            if (isMirageElement(el))
+                added.push(el);
+            for (let cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
+                scan(cur, added);
+            }
+        }
+
         var monitor = NewDOMMonitor(target, update);
         return {
-            start() {
+            start(initialize: boolean) {
+                if (initialize)
+                    init();
                 monitor.start();
             },
             stop() {

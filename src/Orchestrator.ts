@@ -27,7 +27,7 @@ namespace mirage.html {
             registry: registry,
             sync: sync,
             start() {
-                sync.start();
+                sync.start(true);
                 clock.enable();
             },
             stop() {

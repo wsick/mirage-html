@@ -13,7 +13,7 @@ namespace mirage.html.tests {
         var binders: IBinder[] = [];
         var registry = NewBinderRegistry(tree, binders);
         var syncer = NewTreeSynchronizer(testRoot, tree, registry);
-        syncer.start();
+        syncer.start(false);
 
         function getBinderTuple(binder: IBinder): {el: Element; node: core.LayoutNode;} {
             var node = binder.getRoot();
