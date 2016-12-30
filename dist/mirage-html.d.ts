@@ -2,6 +2,16 @@ declare module mirage.html {
     var version: string;
 }
 declare namespace mirage.html {
+    interface IAnimClock {
+        enable(): any;
+        disable(): any;
+    }
+    interface IAnimFrame {
+        (now: number, delta: number): void;
+    }
+    function NewAnimClock(onFrame: IAnimFrame): IAnimClock;
+}
+declare namespace mirage.html {
     interface IBinder {
         getRoot(): core.LayoutNode;
         setRoot(node: core.LayoutNode): any;
@@ -26,6 +36,23 @@ declare namespace mirage.html {
     function isMirageElement(node: Node): boolean;
     function NewDOMMonitor(target: Node, onUpdate: INodeMonitorUpdate): IDOMMonitor;
 }
+declare namespace mirage {
+    function watchDOM(target?: Node): void;
+    function getRoots(): core.LayoutNode[];
+    function getLayoutNode(obj: Element | string): core.LayoutNode;
+    function dumpLayoutTree(root: core.LayoutNode, indent?: string): string;
+}
+declare namespace mirage.html {
+    interface IOrchestrator {
+        tree: ITreeTracker;
+        binders: IBinder[];
+        registry: IBinderRegistry;
+        sync: ITreeSynchronizer;
+        start(): any;
+        stop(): any;
+    }
+    function NewOrchestrator(target: Node): IOrchestrator;
+}
 declare namespace mirage.html {
     interface IPanelInserter {
         add(panel: Panel, el: Element, node: core.LayoutNode): any;
@@ -35,7 +62,7 @@ declare namespace mirage.html {
 }
 declare namespace mirage.html {
     interface ITreeSynchronizer {
-        start(): any;
+        start(initialize: boolean): any;
         stop(): any;
     }
     function NewTreeSynchronizer(target: Node, tree?: ITreeTracker, registry?: IBinderRegistry): ITreeSynchronizer;

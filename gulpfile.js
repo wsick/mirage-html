@@ -31,7 +31,12 @@ meta.scaffolds = [
             '!stress/lib/**/*.ts',
             `dist/${meta.name}.d.ts`
         ]
-    }
+    },
+    {
+        name: 'examples',
+        symdirs: ['dist', 'src'],
+        ignore: 'lib/qunit',
+    },
 ];
 
 fs.readdirSync('./gulp')

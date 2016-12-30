@@ -1,6 +1,47 @@
 namespace mirage.html.tests {
     QUnit.module("TreeSynchronizer");
 
+    QUnit.test("initial", (assert) => {
+        var testRoot = document.createElement('div');
+        testRoot.id = "TreeSynchronizer-root1";
+        document.body.appendChild(testRoot);
+
+        var tree = NewTreeTracker();
+        var binders: IBinder[] = [];
+        var registry = NewBinderRegistry(tree, binders);
+        var syncer = NewTreeSynchronizer(testRoot, tree, registry);
+
+        function getBinderTuple(binder: IBinder): {el: Element; node: core.LayoutNode;} {
+            var node = binder.getRoot();
+            return {
+                el: tree.getElementByNode(node),
+                node: node,
+            };
+        }
+
+        // Pass 1 - add basic tree
+        testRoot.innerHTML = `
+<div id="root" data-layout="type: stack-panel">
+    <div id="child1" data-layout="type: none">
+        <div id="gchild1" data-layout="type: none"></div>
+    </div>
+    <div id="child2" data-layout="type: none"></div>
+    <div id="child3" data-layout="type: none"></div>
+</div>
+`;
+
+        // We are verifying that the different codepath of "initial: true" produces correct result
+        syncer.start(true);
+
+        assert.strictEqual(binders.length, 1, "pass 1 length");
+        let root = getBinderTuple(binders[0]);
+        assert.strictEqual(root.el ? root.el.id : null, "root", "pass 1 - binder 1");
+
+        for (let i = 0, cur = root.el.firstElementChild; !!cur; i++, cur = cur.nextElementSibling) {
+            let curNode = tree.getNodeByElement(cur);
+            assert.strictEqual(curNode ? curNode.tree.parent : null, root.node, `pass 1 - child ${i} parent`);
+        }
+    });
 
     QUnit.test("update", (assert) => {
         var done = assert.async();
@@ -13,7 +54,7 @@ namespace mirage.html.tests {
         var binders: IBinder[] = [];
         var registry = NewBinderRegistry(tree, binders);
         var syncer = NewTreeSynchronizer(testRoot, tree, registry);
-        syncer.start();
+        syncer.start(false);
 
         function getBinderTuple(binder: IBinder): {el: Element; node: core.LayoutNode;} {
             var node = binder.getRoot();

@@ -86,8 +86,13 @@ namespace mirage.html.tests {
         inserter.add(panel, children[4], childNodes[4]);
         inserter.add(panel, children[1], childNodes[1]);
         inserter.add(panel, children[2], childNodes[2]);
+
+        // Test adding a duplicate
+        inserter.add(panel, children[1], childNodes[1]);
+
         inserter.commit();
 
+        assert.strictEqual(panel.childCount, 5, "panel child count");
         for (let i = 0; i < panel.childCount; i++) {
             assert.strictEqual(panel.getChildAt(i), childNodes[i], `panel child ${i}`);
         }
