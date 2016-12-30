@@ -5,11 +5,6 @@ namespace mirage.html {
      It also detects mirage roots and builds binders.
      */
 
-    // TODO: We are currently using setParent to configure layout tree
-    // Instead, we should either
-    // - add child to Panel
-    // - set single child if node type allows it
-
     export interface ITreeSynchronizer {
         start();
         stop();
@@ -68,12 +63,17 @@ namespace mirage.html {
                 }
             }
 
-            if (!node.tree.parent) {
+            let parentNode = node.tree.parent;
+            if (!parentNode) {
                 destroyedRoots.push(node);
                 promoteChildren(el, addedRoots);
             }
 
-            node.setParent(null);
+            if (parentNode instanceof Panel) {
+                parentNode.removeChild(node);
+            } else {
+                node.setParent(null);
+            }
         }
 
         function promoteChildren(el: Element, addedRoots: core.LayoutNode[]) {
@@ -86,7 +86,7 @@ namespace mirage.html {
             }
         }
 
-        function mirrorAncestry(added: Element[], addedRoots: core.LayoutNode[]) {
+        function mirrorAncestry(added: Element[], addedRoots: core.LayoutNode[], inserter: IPanelInserter) {
             // Configure parents after all layout nodes have been created/destroyed
             // This is done to ensure parent layout nodes exist
             // Adds nodes to addedRoots that do not have mirage parents
@@ -96,20 +96,31 @@ namespace mirage.html {
                 if (!node)
                     continue;
                 // coerce 'none' to null
-                node.setParent((el.parentElement ? tree.getNodeByElement(el.parentElement) : null) || null);
+                let parentNode = (el.parentElement ? tree.getNodeByElement(el.parentElement) : null) || null;
+                if (parentNode instanceof Panel) {
+                    // To ensure proper ordering, we will collect all new children for each parent
+                    // We will insert the children in sorted order
+                    inserter.track(parentNode, el, node);
+                } else {
+                    node.setParent(parentNode);
+                }
                 if (!node.tree.parent) {
                     addedRoots.push(node);
                 }
-                configAncestors(el, node);
+                configAncestors(el, node, inserter);
             }
         }
 
-        function configAncestors(parentEl: Element, parentNode: core.LayoutNode) {
-            for (let cur = parentEl.firstElementChild; !!cur; cur = cur.nextElementSibling) {
+        function configAncestors(parentEl: Element, parentNode: core.LayoutNode, inserter: IPanelInserter) {
+            for (let cur = parentEl.firstElementChild, i = 0; !!cur; cur = cur.nextElementSibling, i++) {
                 let curNode = tree.getNodeByElement(cur);
                 if (curNode && !curNode.tree.parent) {
-                    curNode.setParent(parentNode);
-                    configAncestors(cur, curNode);
+                    if (parentNode instanceof Panel) {
+                        inserter.track(parentNode, cur, curNode);
+                    } else {
+                        curNode.setParent(parentNode);
+                    }
+                    configAncestors(cur, curNode, inserter);
                 }
             }
         }
@@ -123,14 +134,16 @@ namespace mirage.html {
          - add binders for new root nodes
          */
         function update(added: Element[], removed: Element[], untagged: Element[]) {
+            let inserter = NewPanelInserter();
             let addedRoots: core.LayoutNode[] = [];
             let destroyedRoots: core.LayoutNode[] = [];
 
             mirrorAdded(added);
             mirrorUntagged(untagged, addedRoots, destroyedRoots);
             mirrorRemoved(removed, addedRoots, destroyedRoots);
-            mirrorAncestry(added, addedRoots);
+            mirrorAncestry(added, addedRoots, inserter);
 
+            inserter.commit();
             registry.update(addedRoots, destroyedRoots);
         }
 
