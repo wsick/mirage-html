@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset='UTF-8'/>
+    <title>Mutation Observers</title>
+</head>
+<body>
+<div id="root">
+
+</div>
+
+<script type="text/javascript">
+    /*
+     https://developer.mozilla.org/en-US/docs/Web/API/MutationRecord
+     mutations: MutationRecord[]
+     MutationRecord:
+         type (String):	Returns attributes if the mutation was an attribute mutation, characterData if it was a mutation to a CharacterData node, and childList if it was a mutation to the tree of nodes.
+         target (Node):	Returns the node the mutation affected, depending on the type. For attributes, it is the element whose attribute changed. For characterData, it is the CharacterData node. For childList, it is the node whose children changed.
+         addedNodes (NodeList):	Return the nodes added. Will be an empty NodeList if no nodes were added.
+         removedNodes (NodeList):	Return the nodes removed. Will be an empty NodeList if no nodes were removed.
+         previousSibling (Node):	Return the previous sibling of the added or removed nodes, or null.
+         nextSibling (Node):	Return the next sibling of the added or removed nodes, or null.
+         attributeName (String):	Returns the local name of the changed attribute, or null.
+         attributeNamespace (String):	Returns the namespace of the changed attribute, or null.
+         oldValue (String):	The return value depends on the type. For attributes, it is the value of the changed attribute before the change. For characterData, it is the data of the changed node before the change. For childList, it is null.
+     */
+
+    var observer = new MutationObserver(mutations => {
+        for (var i = 0; i < mutations.length; i++) {
+            let mutation = mutations[i];
+            if (mutation.type !== "childList")
+                continue;
+            for (var j = 0; j < mutation.addedNodes.length; j++) {
+                console.log("added", mutation.addedNodes[j]);
+            }
+            for (var j = 0; j < mutation.removedNodes.length; j++) {
+                console.log("removed", mutation.removedNodes[j], mutation.target);
+            }
+        }
+    });
+    observer.observe(document.body, {childList: true, subtree: true});
+
+    window.setTimeout(() => {
+        var root = document.getElementById('root');
+
+        console.log("Adding child to root...");
+        var child1 = document.createElement('div');
+        child1.id = "child-1";
+        root.appendChild(child1);
+
+        console.log("Adding grandchild to root child...");
+        var grandchild1 = document.createElement('div');
+        grandchild1.id = "grandchild-1";
+        root.children[0].appendChild(grandchild1);
+
+        window.setTimeout(() => {
+            console.log("Removing grandchild from root child...");
+            root.children[0].removeChild(grandchild1);
+        }, 1);
+    }, 1);
+</script>
+</body>
+</html>
