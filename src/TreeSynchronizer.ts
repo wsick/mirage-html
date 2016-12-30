@@ -43,7 +43,7 @@ namespace mirage.html {
             // The parent may not be mirrored in the layout tree yet
             // We will set parent after all adds/removes have completed
             // TODO: get node type
-            let node = mirage.createNodeByType("...");
+            let node = mirage.createNodeByType("panel");
             tree.add(el, node);
 
             // register children
@@ -149,15 +149,16 @@ namespace mirage.html {
 
         function init() {
             let added: Element[] = [];
-            scan(<Element>target, added);
+            scan(<Element>target, added, false);
             update(added, [], []);
         }
 
-        function scan(el: Element, added: Element[]) {
-            if (isMirageElement(el))
+        function scan(el: Element, added: Element[], parentIsMirage: boolean) {
+            let isMirage = isMirageElement(el);
+            if (isMirage && !parentIsMirage)
                 added.push(el);
             for (let cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
-                scan(cur, added);
+                scan(cur, added, isMirage);
             }
         }
 
