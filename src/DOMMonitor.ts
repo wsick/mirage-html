@@ -11,7 +11,12 @@ namespace mirage.html {
     }
 
     export interface INodeMonitorUpdate {
-        (added: Element[], removed: Element[], untagged: Element[]): void;
+        (added: Element[], removed: Element[], untagged: Element[], changed: IDataLayoutChange[]): void;
+    }
+
+    export interface IDataLayoutChange {
+        target: Element;
+        oldValue: string;
     }
 
     export function isMirageElement(node: Node): boolean {
@@ -27,7 +32,9 @@ namespace mirage.html {
             var added: Element[] = [];
             var removed: Element[] = [];
             var untagged: Element[] = [];
+            var changed: IDataLayoutChange[] = [];
 
+            let needsUpdate = false;
             for (var i = 0; i < mutations.length; i++) {
                 let mutation = mutations[i];
                 if (mutation.type === "childList") {
@@ -35,12 +42,14 @@ namespace mirage.html {
                         let el = mutation.addedNodes[j];
                         if (isMirageElement(el)) {
                             added.push(<Element>el);
+                            needsUpdate = true;
                         }
                     }
                     for (var j = 0; j < mutation.removedNodes.length; j++) {
                         let el = mutation.removedNodes[j];
                         if (isMirageElement(el)) {
                             removed.push(<Element>el);
+                            needsUpdate = true;
                         }
                     }
                 } else if (mutation.type === "attributes") {
@@ -48,18 +57,24 @@ namespace mirage.html {
                         if (isMirageElement(mutation.target)) {
                             // 'data-layout' attribute added
                             added.push(<Element>mutation.target);
+                            needsUpdate = true;
                         }
                     } else {
                         if (!isMirageElement(mutation.target)) {
                             // 'data-layout' attribute removed
                             untagged.push(<Element>mutation.target);
+                            needsUpdate = true;
+                        } else {
+                            // 'data-layout' attribute changed
+                            changed.push({target: <Element>mutation.target, oldValue: mutation.oldValue});
+                            needsUpdate = true;
                         }
                     }
                 }
             }
 
-            if (added.length > 0 || removed.length > 0 || untagged.length > 0) {
-                onUpdate(added, removed, untagged);
+            if (needsUpdate) {
+                onUpdate(added, removed, untagged, changed);
             }
         });
 

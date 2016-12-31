@@ -13,7 +13,8 @@ namespace mirage.html {
 
     export interface ITreeTracker {
         add(el: Element, node: core.LayoutNode): string;
-        removeElement(el: Element);
+        replaceNode(oldNode: core.LayoutNode, newNode: core.LayoutNode): string;
+        removeElement(el: Element): core.LayoutNode;
         elementExists(el: Element): boolean;
         getNodeByElement(el: Element): core.LayoutNode;
         getElementByNode(node: core.LayoutNode): Element;
@@ -40,6 +41,16 @@ namespace mirage.html {
                 elements[uid] = el;
                 nodes[uid] = node;
                 return uid;
+            },
+            replaceNode(oldNode: core.LayoutNode, newNode: core.LayoutNode): string {
+                let uid = oldNode.getAttached("mirage-uid");
+                if (nodes[uid] === oldNode) {
+                    oldNode.setAttached("mirage-uid", undefined);
+                    newNode.setAttached("mirage-uid", uid);
+                    nodes[uid] = newNode;
+                    return uid;
+                }
+                return "";
             },
             removeElement(el: Element): core.LayoutNode {
                 var uid = el.getAttributeNS(XMLNS, "uid");

@@ -47,7 +47,7 @@ namespace mirage.html.tests {
         var done = assert.async();
 
         var testRoot = document.createElement('div');
-        testRoot.id = "TreeSynchronizer-root1";
+        testRoot.id = "TreeSynchronizer-root2";
         document.body.appendChild(testRoot);
 
         var tree = NewTreeTracker();
@@ -107,5 +107,61 @@ namespace mirage.html.tests {
                 }, 1);
             }, 1);
         }, 1);
+    });
+
+    QUnit.test("update-translations", (assert) => {
+        var done = assert.async();
+
+        var testRoot = document.createElement('div');
+        testRoot.id = "TreeSynchronizer-root3";
+        document.body.appendChild(testRoot);
+
+        var tree = NewTreeTracker();
+        var binders: IBinder[] = [];
+        var registry = NewBinderRegistry(tree, binders);
+        var syncer = NewTreeSynchronizer(testRoot, tree, registry);
+        syncer.start(false);
+
+        function getBinderTuple(binder: IBinder): {el: Element; node: core.LayoutNode;} {
+            var node = binder.getRoot();
+            return {
+                el: tree.getElementByNode(node),
+                node: node,
+            };
+        }
+
+        // Pass 1 - add basic tree
+        testRoot.innerHTML = `
+<div id="root" data-layout="type: stack-panel">
+    <div id="child1" data-layout="type: stack-panel">
+        <div id="gchild1" data-layout="type: none"></div>
+    </div>
+    <div id="child2" data-layout="type: none"></div>
+    <div id="child3" data-layout="type: none"></div>
+</div>
+`;
+
+        window.setTimeout(() => {
+            let child1 = testRoot.firstElementChild.firstElementChild;
+            let childNode1 = <Panel>tree.getNodeByElement(child1);
+            let gchildNode1 = childNode1.getChildAt(0);
+
+            // Pass 2 - change child1 type
+            child1.setAttribute("data-layout", "type: grid");
+            window.setTimeout(() => {
+                let newChildNode1 = <Grid>tree.getNodeByElement(child1);
+                assert.notStrictEqual(childNode1, newChildNode1, "child1 layout node replaced");
+                assert.ok(newChildNode1 instanceof Grid, "new child1 is grid");
+                assert.strictEqual(newChildNode1.childCount, 1, "new child1 has old child1 children");
+                assert.strictEqual(newChildNode1.getChildAt(0), gchildNode1, "new child1 child is correct gchild1");
+
+                assert.ok(!childNode1.tree.parent, "old child1 detached");
+                assert.strictEqual(childNode1.childCount, 0, "old child1 children cleared");
+
+                syncer.stop();
+                done();
+            }, 1);
+        }, 1);
+
     });
 }

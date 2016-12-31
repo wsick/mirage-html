@@ -10,9 +10,10 @@ namespace mirage.html {
         stop();
     }
 
-    export function NewTreeSynchronizer(target: Node, tree?: ITreeTracker, registry?: IBinderRegistry): ITreeSynchronizer {
+    export function NewTreeSynchronizer(target: Node, tree?: ITreeTracker, registry?: IBinderRegistry, translator?: IElementTranslator): ITreeSynchronizer {
         tree = tree || NewTreeTracker();
         registry = registry || NewBinderRegistry(tree);
+        translator = translator || NewElementTranslator();
 
         function mirrorAdded(added: Element[]) {
             // Mirror new render elements to layout tree
@@ -42,8 +43,11 @@ namespace mirage.html {
                 return;
             // The parent may not be mirrored in the layout tree yet
             // We will set parent after all adds/removes have completed
-            // TODO: get node type
-            let node = mirage.createNodeByType("panel");
+            let node = translator.translateNew(el);
+            if (!node) {
+                // we could not detect node, it will not be created
+                return;
+            }
             tree.add(el, node);
 
             // register children
@@ -83,6 +87,50 @@ namespace mirage.html {
                 } else {
                     promoteChildren(cur, addedRoots);
                 }
+            }
+        }
+
+        function mirrorTranslations(changes: IDataLayoutChange[], addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
+            for (let i = 0; i < changes.length; i++) {
+                let change = changes[i];
+                let node = tree.getNodeByElement(change.target);
+                let result = translator.translateChange(change.target, node, change.oldValue);
+                if (result !== node) {
+                    // destroy old node, rehook parent/children to new node
+                    replaceNode(node, result, addedRoots, destroyedRoots);
+                } else if (!result) {
+                    // destroy this node, deregister will also hoist children properly
+                    deregister(change.target, true, addedRoots, destroyedRoots);
+                }
+            }
+        }
+
+        function replaceNode(oldNode: core.LayoutNode, newNode: core.LayoutNode, addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
+            let uid = tree.replaceNode(oldNode, newNode);
+            if (!uid) // old node does not exist, what should we do?
+                return;
+
+            // Adjust parent's children
+            let parentNode = oldNode.tree.parent;
+            if (parentNode instanceof Panel) {
+                let index = parentNode.indexOfChild(oldNode);
+                parentNode.removeChild(oldNode);
+                parentNode.insertChild(newNode, index);
+            } else if (!parentNode) {
+                destroyedRoots.push(oldNode);
+                addedRoots.push(newNode);
+            } else {
+                oldNode.setParent(null);
+                newNode.setParent(parentNode);
+            }
+
+            // Migrate old children to new node
+            if (newNode instanceof Panel) {
+                for (let walker = oldNode.tree.walk(); walker.step();) {
+                    newNode.appendChild(walker.current);
+                }
+                if (oldNode instanceof Panel)
+                    oldNode.tree.children.length = 0;
             }
         }
 
@@ -129,11 +177,12 @@ namespace mirage.html {
          Each update, we need to
          - construct new layout nodes mirroring new render elements
          - detach layout nodes mirroring old render elements
+         - run data-layout translation changes
          - configure all new layout nodes with parent
          - hoist binders to the true root
          - add binders for new root nodes
          */
-        function update(added: Element[], removed: Element[], untagged: Element[]) {
+        function update(added: Element[], removed: Element[], untagged: Element[], changed: IDataLayoutChange[]) {
             let inserter = NewPanelInserter();
             let addedRoots: core.LayoutNode[] = [];
             let destroyedRoots: core.LayoutNode[] = [];
@@ -141,6 +190,7 @@ namespace mirage.html {
             mirrorAdded(added);
             mirrorUntagged(untagged, addedRoots, destroyedRoots);
             mirrorRemoved(removed, addedRoots, destroyedRoots);
+            mirrorTranslations(changed, addedRoots, destroyedRoots);
             mirrorAncestry(added, addedRoots, inserter);
 
             inserter.commit();
@@ -150,7 +200,7 @@ namespace mirage.html {
         function init() {
             let added: Element[] = [];
             scan(<Element>target, added, false);
-            update(added, [], []);
+            update(added, [], [], []);
         }
 
         function scan(el: Element, added: Element[], parentIsMirage: boolean) {

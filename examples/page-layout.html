@@ -8,18 +8,18 @@
 </head>
 <body onload="mirage.watchDOM()" style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
 <div data-layout="type: grid; column-definitions: 100 *; row-definitions: 100 * auto;">
-    <div id="header" data-layout="type: none; grid.column-span: 2;" style="background-color: darkblue; color: white; font-size: 20px;">
+    <div id="header" data-layout="type: panel; grid.column-span: 2;" style="background-color: darkblue; color: white; font-size: 20px;">
         Page Layout
     </div>
     <div id="left-menu" data-layout="type: stack-panel; orientation: vertical; grid.row: 1;">
-        <div data-layout="type: none; height: 30;">Menu 1</div>
-        <div data-layout="type: none; height: 30;">Menu 2</div>
-        <div data-layout="type: none; height: 30;">Menu 3</div>
+        <div data-layout="type: panel; height: 30;">Menu 1</div>
+        <div data-layout="type: panel; height: 30;">Menu 2</div>
+        <div data-layout="type: panel; height: 30;">Menu 3</div>
     </div>
-    <div id="body" data-layout="type: none; grid.row: 1; grid.column: 1;">
+    <div id="body" data-layout="type: panel; grid.row: 1; grid.column: 1;">
 
     </div>
-    <div id="footer" data-layout="type: none; grid.row: 2; grid.column-span: 2;">
+    <div id="footer" data-layout="type: panel; grid.row: 2; grid.column-span: 2;">
         <span style="font-size: 10px; vertical-align: middle; horiz-align: center;">&copy; WickedSick 2016</span>
     </div>
 </div>
