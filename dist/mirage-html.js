@@ -171,6 +171,8 @@ var mirage;
                 var added = [];
                 var removed = [];
                 var untagged = [];
+                var changed = [];
+                var needsUpdate = false;
                 for (var i = 0; i < mutations.length; i++) {
                     var mutation = mutations[i];
                     if (mutation.type === "childList") {
@@ -178,12 +180,14 @@ var mirage;
                             var el = mutation.addedNodes[j];
                             if (isMirageElement(el)) {
                                 added.push(el);
+                                needsUpdate = true;
                             }
                         }
                         for (var j = 0; j < mutation.removedNodes.length; j++) {
                             var el = mutation.removedNodes[j];
                             if (isMirageElement(el)) {
                                 removed.push(el);
+                                needsUpdate = true;
                             }
                         }
                     }
@@ -191,17 +195,23 @@ var mirage;
                         if (!mutation.oldValue) {
                             if (isMirageElement(mutation.target)) {
                                 added.push(mutation.target);
+                                needsUpdate = true;
                             }
                         }
                         else {
                             if (!isMirageElement(mutation.target)) {
                                 untagged.push(mutation.target);
+                                needsUpdate = true;
+                            }
+                            else {
+                                changed.push({ target: mutation.target, oldValue: mutation.oldValue });
+                                needsUpdate = true;
                             }
                         }
                     }
                 }
-                if (added.length > 0 || removed.length > 0 || untagged.length > 0) {
-                    onUpdate(added, removed, untagged);
+                if (needsUpdate) {
+                    onUpdate(added, removed, untagged, changed);
                 }
             });
             return {
@@ -220,6 +230,69 @@ var mirage;
             };
         }
         html.NewDOMMonitor = NewDOMMonitor;
+    })(html = mirage.html || (mirage.html = {}));
+})(mirage || (mirage = {}));
+var mirage;
+(function (mirage) {
+    var html;
+    (function (html) {
+        function NewElementTranslator() {
+            function parseDataLayout(dataLayout) {
+                var hash = {};
+                for (var tokens = dataLayout.split(";"), i = 0; i < tokens.length; i++) {
+                    var token = tokens[i];
+                    var index = token.indexOf(':');
+                    if (index < 0)
+                        continue;
+                    hash[token.substr(0, index).trim()] = token.substr(index + 1).trim();
+                }
+                return hash;
+            }
+            function applyHash(node, hash) {
+                for (var keys = Object.keys(hash), i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    var mapper = mirage.map.getMapper(key);
+                    if (mapper)
+                        mapper(node, hash[key]);
+                }
+            }
+            return {
+                translateNew: function (el) {
+                    var hash = parseDataLayout(el.getAttribute("data-layout"));
+                    var type = hash["type"];
+                    if (!type)
+                        return null;
+                    var node = mirage.createNodeByType(type);
+                    applyHash(node, hash);
+                    return node;
+                },
+                translateChange: function (el, node, oldDataLayout) {
+                    var oldHash = parseDataLayout(oldDataLayout);
+                    var newHash = parseDataLayout(el.getAttribute("data-layout"));
+                    var newType = newHash["type"];
+                    if (!newType)
+                        return null;
+                    if (oldHash["type"] !== newType) {
+                        var newNode = mirage.createNodeByType(newType);
+                        applyHash(newNode, newHash);
+                        return newNode;
+                    }
+                    var oldKeys = Object.keys(oldHash);
+                    var newKeys = Object.keys(newHash);
+                    for (var i = 0; i < oldKeys.length; i++) {
+                        var key = oldKeys[i];
+                        if (newKeys.indexOf(key) > -1)
+                            continue;
+                        var mapper = mirage.map.getMapper(key);
+                        if (mapper)
+                            mapper(node, undefined);
+                    }
+                    applyHash(node, newHash);
+                    return node;
+                },
+            };
+        }
+        html.NewElementTranslator = NewElementTranslator;
     })(html = mirage.html || (mirage.html = {}));
 })(mirage || (mirage = {}));
 var mirage;
@@ -342,9 +415,10 @@ var mirage;
 (function (mirage) {
     var html;
     (function (html) {
-        function NewTreeSynchronizer(target, tree, registry) {
+        function NewTreeSynchronizer(target, tree, registry, translator) {
             tree = tree || html.NewTreeTracker();
             registry = registry || html.NewBinderRegistry(tree);
+            translator = translator || html.NewElementTranslator();
             function mirrorAdded(added) {
                 for (var i = 0; i < added.length; i++) {
                     register(added[i]);
@@ -363,7 +437,10 @@ var mirage;
             function register(el) {
                 if (tree.elementExists(el) || !html.isMirageElement(el))
                     return;
-                var node = mirage.createNodeByType("panel");
+                var node = translator.translateNew(el);
+                if (!node) {
+                    return;
+                }
                 tree.add(el, node);
                 for (var cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
                     register(cur);
@@ -400,6 +477,45 @@ var mirage;
                     }
                 }
             }
+            function mirrorTranslations(changes, addedRoots, destroyedRoots) {
+                for (var i = 0; i < changes.length; i++) {
+                    var change = changes[i];
+                    var node = tree.getNodeByElement(change.target);
+                    var result = translator.translateChange(change.target, node, change.oldValue);
+                    if (result !== node) {
+                        replaceNode(node, result, addedRoots, destroyedRoots);
+                    }
+                    else if (!result) {
+                        deregister(change.target, true, addedRoots, destroyedRoots);
+                    }
+                }
+            }
+            function replaceNode(oldNode, newNode, addedRoots, destroyedRoots) {
+                var uid = tree.replaceNode(oldNode, newNode);
+                if (!uid)
+                    return;
+                var parentNode = oldNode.tree.parent;
+                if (parentNode instanceof mirage.Panel) {
+                    var index = parentNode.indexOfChild(oldNode);
+                    parentNode.removeChild(oldNode);
+                    parentNode.insertChild(newNode, index);
+                }
+                else if (!parentNode) {
+                    destroyedRoots.push(oldNode);
+                    addedRoots.push(newNode);
+                }
+                else {
+                    oldNode.setParent(null);
+                    newNode.setParent(parentNode);
+                }
+                if (newNode instanceof mirage.Panel) {
+                    for (var walker = oldNode.tree.walk(); walker.step();) {
+                        newNode.appendChild(walker.current);
+                    }
+                    if (oldNode instanceof mirage.Panel)
+                        oldNode.tree.children.length = 0;
+                }
+            }
             function mirrorAncestry(added, addedRoots, inserter) {
                 for (var i = 0; i < added.length; i++) {
                     var el = added[i];
@@ -433,13 +549,14 @@ var mirage;
                     }
                 }
             }
-            function update(added, removed, untagged) {
+            function update(added, removed, untagged, changed) {
                 var inserter = html.NewPanelInserter();
                 var addedRoots = [];
                 var destroyedRoots = [];
                 mirrorAdded(added);
                 mirrorUntagged(untagged, addedRoots, destroyedRoots);
                 mirrorRemoved(removed, addedRoots, destroyedRoots);
+                mirrorTranslations(changed, addedRoots, destroyedRoots);
                 mirrorAncestry(added, addedRoots, inserter);
                 inserter.commit();
                 registry.update(addedRoots, destroyedRoots);
@@ -447,7 +564,7 @@ var mirage;
             function init() {
                 var added = [];
                 scan(target, added, false);
-                update(added, [], []);
+                update(added, [], [], []);
             }
             function scan(el, added, parentIsMirage) {
                 var isMirage = html.isMirageElement(el);
@@ -490,6 +607,16 @@ var mirage;
                     elements[uid] = el;
                     nodes[uid] = node;
                     return uid;
+                },
+                replaceNode: function (oldNode, newNode) {
+                    var uid = oldNode.getAttached("mirage-uid");
+                    if (nodes[uid] === oldNode) {
+                        oldNode.setAttached("mirage-uid", undefined);
+                        newNode.setAttached("mirage-uid", uid);
+                        nodes[uid] = newNode;
+                        return uid;
+                    }
+                    return "";
                 },
                 removeElement: function (el) {
                     var uid = el.getAttributeNS(XMLNS, "uid");

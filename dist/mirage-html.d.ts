@@ -31,10 +31,21 @@ declare namespace mirage.html {
         stop(): any;
     }
     interface INodeMonitorUpdate {
-        (added: Element[], removed: Element[], untagged: Element[]): void;
+        (added: Element[], removed: Element[], untagged: Element[], changed: IDataLayoutChange[]): void;
+    }
+    interface IDataLayoutChange {
+        target: Element;
+        oldValue: string;
     }
     function isMirageElement(node: Node): boolean;
     function NewDOMMonitor(target: Node, onUpdate: INodeMonitorUpdate): IDOMMonitor;
+}
+declare namespace mirage.html {
+    interface IElementTranslator {
+        translateNew(el: Element): core.LayoutNode;
+        translateChange(el: Element, node: core.LayoutNode, oldDataLayout: string): core.LayoutNode;
+    }
+    function NewElementTranslator(): IElementTranslator;
 }
 declare namespace mirage {
     function watchDOM(target?: Node): void;
@@ -65,12 +76,13 @@ declare namespace mirage.html {
         start(initialize: boolean): any;
         stop(): any;
     }
-    function NewTreeSynchronizer(target: Node, tree?: ITreeTracker, registry?: IBinderRegistry): ITreeSynchronizer;
+    function NewTreeSynchronizer(target: Node, tree?: ITreeTracker, registry?: IBinderRegistry, translator?: IElementTranslator): ITreeSynchronizer;
 }
 declare namespace mirage.html {
     interface ITreeTracker {
         add(el: Element, node: core.LayoutNode): string;
-        removeElement(el: Element): any;
+        replaceNode(oldNode: core.LayoutNode, newNode: core.LayoutNode): string;
+        removeElement(el: Element): core.LayoutNode;
         elementExists(el: Element): boolean;
         getNodeByElement(el: Element): core.LayoutNode;
         getElementByNode(node: core.LayoutNode): Element;
