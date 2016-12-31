@@ -10,9 +10,10 @@ namespace mirage.html {
         stop();
     }
 
-    export function NewTreeSynchronizer(target: Node, tree?: ITreeTracker, registry?: IBinderRegistry): ITreeSynchronizer {
+    export function NewTreeSynchronizer(target: Node, tree?: ITreeTracker, registry?: IBinderRegistry, translator?: IElementTranslator): ITreeSynchronizer {
         tree = tree || NewTreeTracker();
         registry = registry || NewBinderRegistry(tree);
+        translator = translator || NewElementTranslator();
 
         function mirrorAdded(added: Element[]) {
             // Mirror new render elements to layout tree
@@ -42,8 +43,11 @@ namespace mirage.html {
                 return;
             // The parent may not be mirrored in the layout tree yet
             // We will set parent after all adds/removes have completed
-            // TODO: get node type
-            let node = mirage.createNodeByType("panel");
+            let node = translator.translateNew(el);
+            if (!node) {
+                // we could not detect node, it will not be created
+                return;
+            }
             tree.add(el, node);
 
             // register children
