@@ -90,6 +90,50 @@ namespace mirage.html {
             }
         }
 
+        function mirrorTranslations(changes: IDataLayoutChange[], addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
+            for (let i = 0; i < changes.length; i++) {
+                let change = changes[i];
+                let node = tree.getNodeByElement(change.target);
+                let result = translator.translateChange(change.target, node, change.oldValue);
+                if (result !== node) {
+                    // destroy old node, rehook parent/children to new node
+                    replaceNode(node, result, addedRoots, destroyedRoots);
+                } else if (!result) {
+                    // destroy this node, deregister will also hoist children properly
+                    deregister(change.target, true, addedRoots, destroyedRoots);
+                }
+            }
+        }
+
+        function replaceNode(oldNode: core.LayoutNode, newNode: core.LayoutNode, addedRoots: core.LayoutNode[], destroyedRoots: core.LayoutNode[]) {
+            let uid = tree.replaceNode(oldNode, newNode);
+            if (!uid) // old node does not exist, what should we do?
+                return;
+
+            // Adjust parent's children
+            let parentNode = oldNode.tree.parent;
+            if (parentNode instanceof Panel) {
+                let index = parentNode.indexOfChild(oldNode);
+                parentNode.removeChild(oldNode);
+                parentNode.insertChild(newNode, index);
+            } else if (!parentNode) {
+                destroyedRoots.push(oldNode);
+                addedRoots.push(newNode);
+            } else {
+                oldNode.setParent(null);
+                newNode.setParent(parentNode);
+            }
+
+            // Migrate old children to new node
+            if (newNode instanceof Panel) {
+                for (let walker = oldNode.tree.walk(); walker.step();) {
+                    newNode.appendChild(walker.current);
+                }
+                if (oldNode instanceof Panel)
+                    oldNode.tree.children.length = 0;
+            }
+        }
+
         function mirrorAncestry(added: Element[], addedRoots: core.LayoutNode[], inserter: IPanelInserter) {
             // Configure parents after all layout nodes have been created/destroyed
             // This is done to ensure parent layout nodes exist
@@ -133,6 +177,7 @@ namespace mirage.html {
          Each update, we need to
          - construct new layout nodes mirroring new render elements
          - detach layout nodes mirroring old render elements
+         - run data-layout translation changes
          - configure all new layout nodes with parent
          - hoist binders to the true root
          - add binders for new root nodes
@@ -145,6 +190,7 @@ namespace mirage.html {
             mirrorAdded(added);
             mirrorUntagged(untagged, addedRoots, destroyedRoots);
             mirrorRemoved(removed, addedRoots, destroyedRoots);
+            mirrorTranslations(changed, addedRoots, destroyedRoots);
             mirrorAncestry(added, addedRoots, inserter);
 
             inserter.commit();
