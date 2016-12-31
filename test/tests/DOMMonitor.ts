@@ -10,7 +10,7 @@ namespace mirage.html.tests {
         var added: Element[] = [];
         var removed: Element[] = [];
         var monitor = NewDOMMonitor(monitorRoot,
-            (newEls, oldEls) => {
+            (newEls, oldEls, untagged, changed) => {
                 added = added.concat(newEls);
                 removed = removed.concat(oldEls);
             });
@@ -47,7 +47,7 @@ namespace mirage.html.tests {
         var added: Element[] = [];
         var removed: Element[] = [];
         var monitor = NewDOMMonitor(monitorRoot,
-            (newEls, oldEls) => {
+            (newEls, oldEls, untagged, changed) => {
                 added = added.concat(newEls);
                 removed = removed.concat(oldEls);
             });
@@ -65,6 +65,38 @@ namespace mirage.html.tests {
 
                 assert.strictEqual(added.length, 1, "1 added");
                 assert.ok(added.indexOf(lateNode1) > -1, "added late");
+
+                done();
+            }, 1);
+        }, 1);
+    });
+
+    QUnit.test("data-layout-changed", (assert) => {
+        var done = assert.async();
+
+        var monitorRoot = document.createElement('div');
+        monitorRoot.id = "DOMMonitor-root3";
+        document.body.appendChild(monitorRoot);
+        var changes: IDataLayoutChange[] = [];
+        var monitor = NewDOMMonitor(monitorRoot,
+            (newEls, oldEls, untagged, changed) => {
+                changes = changes.concat(changed);
+            });
+        monitor.start();
+
+        var el1 = document.createElement('div');
+        el1.setAttribute("data-layout", "type: panel;");
+        monitorRoot.appendChild(el1);
+
+        window.setTimeout(() => {
+            // now that the node is added, we can alter the attribute
+            el1.setAttribute("data-layout", "type: stack-panel;");
+            window.setTimeout(() => {
+                monitor.stop();
+
+                assert.strictEqual(changes.length, 1, "1 change");
+                assert.strictEqual(changes[0].oldValue, "type: panel;", "change 0 old value");
+                assert.strictEqual(changes[0].target, el1, "change 0 target");
 
                 done();
             }, 1);

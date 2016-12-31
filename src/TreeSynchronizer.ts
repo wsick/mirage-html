@@ -133,7 +133,7 @@ namespace mirage.html {
          - hoist binders to the true root
          - add binders for new root nodes
          */
-        function update(added: Element[], removed: Element[], untagged: Element[]) {
+        function update(added: Element[], removed: Element[], untagged: Element[], changed: IDataLayoutChange[]) {
             let inserter = NewPanelInserter();
             let addedRoots: core.LayoutNode[] = [];
             let destroyedRoots: core.LayoutNode[] = [];
@@ -150,7 +150,7 @@ namespace mirage.html {
         function init() {
             let added: Element[] = [];
             scan(<Element>target, added, false);
-            update(added, [], []);
+            update(added, [], [], []);
         }
 
         function scan(el: Element, added: Element[], parentIsMirage: boolean) {
