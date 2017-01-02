@@ -19,12 +19,20 @@ namespace mirage.html {
         let drafter: mirage.draft.IDrafter;
         let lastDraftSize = new Size(NaN, NaN);
 
+        function updateSlot(el: HTMLElement, slot: IRect) {
+            el.style.position = "absolute";
+            el.style.left = `${slot.x}px`;
+            el.style.top = `${slot.y}px`;
+            el.style.width = `${slot.width}px`;
+            el.style.height = `${slot.height}px`;
+        }
+
         var updater: mirage.draft.IDraftUpdater = {
             updateSlots(updates: draft.ISlotUpdate[]) {
                 for (var i = 0; i < updates.length; i++) {
                     let update = updates[i];
-                    let el = <HTMLElement>tree.getElementByNode(update.node);
-                    // TODO: updateElement(el, update.node, update.oldRect, update.newRect);
+                    if (update.node !== root)
+                        updateSlot(<HTMLElement>tree.getElementByNode(update.node), update.newRect);
                 }
             },
         };
