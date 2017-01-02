@@ -17,25 +17,8 @@ namespace mirage.html {
         let root: core.LayoutNode;
         let element: HTMLElement;
         let drafter: mirage.draft.IDrafter;
+        let updater: mirage.draft.IDraftUpdater = NewDraftUpdater(tree);
         let lastDraftSize = new Size(NaN, NaN);
-
-        function updateSlot(el: HTMLElement, slot: IRect) {
-            el.style.position = "absolute";
-            el.style.left = `${slot.x}px`;
-            el.style.top = `${slot.y}px`;
-            el.style.width = `${slot.width}px`;
-            el.style.height = `${slot.height}px`;
-        }
-
-        var updater: mirage.draft.IDraftUpdater = {
-            updateSlots(updates: draft.ISlotUpdate[]) {
-                for (var i = 0; i < updates.length; i++) {
-                    let update = updates[i];
-                    if (update.node !== root)
-                        updateSlot(<HTMLElement>tree.getElementByNode(update.node), update.newRect);
-                }
-            },
-        };
 
         function getRootSize(): ISize {
             let htmlHeight = root.getAttached("html.height");
