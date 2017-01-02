@@ -49,8 +49,9 @@ namespace mirage.html {
                 }
             },
             run() {
-                var rootSize = getElementSize(element);
-                if (!Size.isEqual(lastDraftSize, rootSize)) {
+                let rootSize = getElementSize(element);
+                if ((root.state.flags & mirage.core.LayoutFlags.hints) > 0 || !Size.isEqual(lastDraftSize, rootSize)) {
+                    //root.invalidateMeasure();
                     drafter(updater, rootSize);
                     Size.copyTo(rootSize, lastDraftSize);
                 }
