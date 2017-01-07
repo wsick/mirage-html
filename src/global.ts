@@ -34,4 +34,13 @@ namespace mirage {
         }
         return s;
     }
+
+    export function enableConsoleLogger() {
+        mirage.logger = mirage.logging.NewConsoleLogger(node => {
+            let el = orchestrator.tree.getElementByNode(node);
+            let id = el && el.id ? `#${el.id}` : "";
+            let type = <any>node.constructor;
+            return `${type.name}${id}`;
+        });
+    }
 }
