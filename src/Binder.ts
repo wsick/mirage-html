@@ -15,22 +15,16 @@ namespace mirage.html {
 
     export function NewBinder(tree: ITreeTracker): IBinder {
         let root: core.LayoutNode;
-        let element: Element;
+        let element: HTMLElement;
         let drafter: mirage.draft.IDrafter;
+        let updater: mirage.draft.IDraftUpdater = NewDraftUpdater(tree);
         let lastDraftSize = new Size(NaN, NaN);
 
-        var updater: mirage.draft.IDraftUpdater = {
-            updateSlots(updates: draft.ISlotUpdate[]) {
-                for (var i = 0; i < updates.length; i++) {
-                    let update = updates[i];
-                    let el = tree.getElementByNode(update.node);
-                    // TODO: updateElement(el, update.node, update.oldRect, update.newRect);
-                }
-            },
-        };
-
-        function getElementSize(el: Element): ISize {
-            return new Size(el.scrollWidth, el.scrollHeight);
+        function getRootSize(): ISize {
+            let htmlHeight = root.getAttached("html.height");
+            if (htmlHeight === "window")
+                return new Size(window.innerWidth, window.innerHeight - 20);
+            return new Size(element.scrollWidth, element.scrollHeight);
         }
 
         return {
@@ -44,15 +38,18 @@ namespace mirage.html {
                     element = null;
                     drafter = null;
                 } else {
-                    element = tree.getElementByNode(root);
+                    element = <HTMLElement>tree.getElementByNode(root);
                     drafter = draft.NewDrafter(root);
                 }
             },
             run() {
-                var rootSize = getElementSize(element);
+                let rootSize = getRootSize();
                 if (!Size.isEqual(lastDraftSize, rootSize)) {
-                    drafter(updater, rootSize);
+                    root.invalidateMeasure();
                     Size.copyTo(rootSize, lastDraftSize);
+                }
+                if ((root.state.flags & mirage.core.LayoutFlags.hints) > 0) {
+                    drafter(updater, rootSize);
                 }
             },
         };

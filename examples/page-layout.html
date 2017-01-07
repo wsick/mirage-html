@@ -6,15 +6,15 @@
     <script src="lib/mirage/dist/mirage.js"></script>
     <script src="lib/mirage-html/dist/mirage-html.js"></script>
 </head>
-<body onload="mirage.watchDOM()" style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
-<div data-layout="type: grid; column-definitions: 100 *; row-definitions: 100 * auto;">
+<body onload="mirage.html.watch()" style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
+<div data-layout="html.height: window; type: grid; column-definitions: 100 *; row-definitions: 100 * auto;">
     <div id="header" data-layout="type: panel; grid.column-span: 2;" style="background-color: darkblue; color: white; font-size: 20px;">
         Page Layout
     </div>
-    <div id="left-menu" data-layout="type: stack-panel; orientation: vertical; grid.row: 1;">
-        <div data-layout="type: panel; height: 30;">Menu 1</div>
-        <div data-layout="type: panel; height: 30;">Menu 2</div>
-        <div data-layout="type: panel; height: 30;">Menu 3</div>
+    <div id="left-menu" data-layout="type: stack-panel; orientation: vertical; grid.row: 1;" style="background-color: orange;">
+        <div id="menu1" data-layout="type: panel; height: 30;">Menu 1</div>
+        <div id="menu2" data-layout="type: panel; height: 30;">Menu 2</div>
+        <div id="menu3" data-layout="type: panel; height: 30;">Menu 3</div>
     </div>
     <div id="body" data-layout="type: panel; grid.row: 1; grid.column: 1;">
 

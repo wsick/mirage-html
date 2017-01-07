@@ -41,17 +41,21 @@ declare namespace mirage.html {
     function NewDOMMonitor(target: Node, onUpdate: INodeMonitorUpdate): IDOMMonitor;
 }
 declare namespace mirage.html {
+    function NewDraftUpdater(tree: ITreeTracker): mirage.draft.IDraftUpdater;
+}
+declare namespace mirage.html {
     interface IElementTranslator {
         translateNew(el: Element): core.LayoutNode;
         translateChange(el: Element, node: core.LayoutNode, oldDataLayout: string): core.LayoutNode;
     }
     function NewElementTranslator(): IElementTranslator;
 }
-declare namespace mirage {
-    function watchDOM(target?: Node): void;
+declare namespace mirage.html {
+    function watch(target?: Node): void;
     function getRoots(): core.LayoutNode[];
     function getLayoutNode(obj: Element | string): core.LayoutNode;
     function dumpLayoutTree(root: core.LayoutNode, indent?: string): string;
+    function enableLogging(): void;
 }
 declare namespace mirage.html {
     interface IOrchestrator {

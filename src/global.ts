@@ -1,7 +1,7 @@
-namespace mirage {
+namespace mirage.html {
     var orchestrator: html.IOrchestrator;
 
-    export function watchDOM(target?: Node) {
+    export function watch(target?: Node) {
         target = target || document.body;
         orchestrator = html.NewOrchestrator(target);
         orchestrator.start();
@@ -33,5 +33,14 @@ namespace mirage {
             s += dumpLayoutTree(walker.current, indent + "  ");
         }
         return s;
+    }
+
+    export function enableLogging() {
+        mirage.logger = mirage.logging.NewConsoleLogger(node => {
+            let el = orchestrator.tree.getElementByNode(node);
+            let id = el && el.id ? `#${el.id}` : "";
+            let type = <any>node.constructor;
+            return `${type.name}${id}`;
+        });
     }
 }
