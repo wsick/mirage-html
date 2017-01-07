@@ -42,17 +42,13 @@ var mirage;
             var root;
             var element;
             var drafter;
+            var updater = html.NewDraftUpdater(tree);
             var lastDraftSize = new mirage.Size(NaN, NaN);
-            var updater = {
-                updateSlots: function (updates) {
-                    for (var i = 0; i < updates.length; i++) {
-                        var update = updates[i];
-                        var el = tree.getElementByNode(update.node);
-                    }
-                },
-            };
-            function getElementSize(el) {
-                return new mirage.Size(el.scrollWidth, el.scrollHeight);
+            function getRootSize() {
+                var htmlHeight = root.getAttached("html.height");
+                if (htmlHeight === "window")
+                    return new mirage.Size(window.innerWidth, window.innerHeight - 20);
+                return new mirage.Size(element.scrollWidth, element.scrollHeight);
             }
             return {
                 getRoot: function () {
@@ -71,10 +67,13 @@ var mirage;
                     }
                 },
                 run: function () {
-                    var rootSize = getElementSize(element);
+                    var rootSize = getRootSize();
                     if (!mirage.Size.isEqual(lastDraftSize, rootSize)) {
-                        drafter(updater, rootSize);
+                        root.invalidateMeasure();
                         mirage.Size.copyTo(rootSize, lastDraftSize);
+                    }
+                    if ((root.state.flags & mirage.core.LayoutFlags.hints) > 0) {
+                        drafter(updater, rootSize);
                     }
                 },
             };
@@ -89,38 +88,42 @@ var mirage;
         function NewBinderRegistry(tree, binders) {
             var roots = [];
             binders = binders || [];
-            function findHoistCandidate(binder) {
-                var curRoot = binder.getRoot();
-                if (!curRoot)
-                    return null;
-                var newRoot = curRoot;
-                while (newRoot.tree.parent) {
-                    newRoot = newRoot.tree.parent;
-                }
-                if (newRoot === curRoot)
-                    return null;
-                if (roots.indexOf(newRoot) > -1)
-                    return null;
-                return newRoot;
-            }
-            function hoist(addedRoots) {
-                var missingBinderNodes = addedRoots.slice(0);
+            function hoist(addedRoots, destroyedRoots) {
                 for (var i = 0; i < binders.length; i++) {
                     var binder = binders[i];
-                    var newRoot = findHoistCandidate(binder);
-                    if (!newRoot) {
+                    var curRoot = binder.getRoot();
+                    if (!curRoot) {
                         binders.splice(i, 1);
                         i--;
                         continue;
                     }
-                    binder.setRoot(newRoot);
-                    roots.push(newRoot);
-                    var missingIndex = missingBinderNodes.indexOf(newRoot);
-                    if (missingIndex > -1) {
-                        missingBinderNodes.splice(missingIndex, 1);
+                    var newRoot = findRoot(curRoot);
+                    if (curRoot !== newRoot) {
+                        replaceBinderRoot(binder, curRoot, newRoot, destroyedRoots);
                     }
+                    var existingIndex = addedRoots.indexOf(newRoot);
+                    if (existingIndex > -1)
+                        addedRoots.splice(i, 1);
                 }
-                return missingBinderNodes;
+            }
+            function findRoot(curRoot) {
+                var newRoot = curRoot;
+                while (newRoot.tree.parent) {
+                    newRoot = newRoot.tree.parent;
+                }
+                return newRoot;
+            }
+            function replaceBinderRoot(binder, curRoot, newRoot, destroyedRoots) {
+                // Replace this binder's root with newRoot
+                if (roots.indexOf(newRoot) > -1) {
+                    destroyedRoots.push(curRoot);
+                    return;
+                }
+                var oldIndex = roots.indexOf(curRoot);
+                if (oldIndex > -1)
+                    roots.splice(oldIndex, 1);
+                binder.setRoot(newRoot);
+                roots.push(newRoot);
             }
             function create(nodes) {
                 for (var i = 0; i < nodes.length; i++) {
@@ -131,26 +134,30 @@ var mirage;
                     binders.push(binder);
                 }
             }
-            function adjustDestroyed(destroyedRoots) {
+            function destroy(destroyedRoots) {
                 for (var i = 0; i < binders.length; i++) {
-                    var binder = binders[i];
-                    var curRoot = binder.getRoot();
-                    var index = destroyedRoots.indexOf(curRoot);
+                    var index = destroyedRoots.indexOf(binders[i].getRoot());
                     if (index > -1) {
-                        binders.splice(index, 1);
+                        destroyBinder(index);
                         i--;
-                        binder.setRoot(null);
-                        var trackIndex = roots.indexOf(curRoot);
-                        if (trackIndex > -1)
-                            roots.splice(trackIndex, 1);
                     }
+                }
+            }
+            function destroyBinder(index) {
+                var binder = binders.splice(index, 1)[0];
+                var curRoot = binder.getRoot();
+                binder.setRoot(null);
+                if (curRoot) {
+                    var trackIndex = roots.indexOf(curRoot);
+                    if (trackIndex > -1)
+                        roots.splice(trackIndex, 1);
                 }
             }
             return {
                 update: function (addedRoots, destroyedRoots) {
-                    var missingBinderNodes = hoist(addedRoots);
-                    create(missingBinderNodes);
-                    adjustDestroyed(destroyedRoots);
+                    hoist(addedRoots, destroyedRoots);
+                    create(addedRoots);
+                    destroy(destroyedRoots);
                 },
             };
         }
@@ -230,6 +237,33 @@ var mirage;
             };
         }
         html.NewDOMMonitor = NewDOMMonitor;
+    })(html = mirage.html || (mirage.html = {}));
+})(mirage || (mirage = {}));
+var mirage;
+(function (mirage) {
+    var html;
+    (function (html) {
+        function NewDraftUpdater(tree) {
+            function updateSlot(el, slot) {
+                el.style.position = "absolute";
+                el.style.left = slot.x + "px";
+                el.style.top = slot.y + "px";
+                el.style.width = slot.width + "px";
+                el.style.height = slot.height + "px";
+            }
+            return {
+                updateSlots: function (updates) {
+                    for (var i = 0; i < updates.length; i++) {
+                        var update = updates[i];
+                        var node = update.node;
+                        if (!node.tree.parent)
+                            continue;
+                        updateSlot(tree.getElementByNode(update.node), update.newRect);
+                    }
+                },
+            };
+        }
+        html.NewDraftUpdater = NewDraftUpdater;
     })(html = mirage.html || (mirage.html = {}));
 })(mirage || (mirage = {}));
 var mirage;
@@ -333,6 +367,15 @@ var mirage;
         return s;
     }
     mirage.dumpLayoutTree = dumpLayoutTree;
+    function enableConsoleLogger() {
+        mirage.logger = mirage.logging.NewConsoleLogger(function (node) {
+            var el = orchestrator.tree.getElementByNode(node);
+            var id = el && el.id ? "#" + el.id : "";
+            var type = node.constructor;
+            return "" + type.name + id;
+        });
+    }
+    mirage.enableConsoleLogger = enableConsoleLogger;
 })(mirage || (mirage = {}));
 var mirage;
 (function (mirage) {
