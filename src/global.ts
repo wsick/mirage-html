@@ -1,7 +1,7 @@
-namespace mirage {
+namespace mirage.html {
     var orchestrator: html.IOrchestrator;
 
-    export function watchDOM(target?: Node) {
+    export function watch(target?: Node) {
         target = target || document.body;
         orchestrator = html.NewOrchestrator(target);
         orchestrator.start();
@@ -35,7 +35,7 @@ namespace mirage {
         return s;
     }
 
-    export function enableConsoleLogger() {
+    export function enableLogging() {
         mirage.logger = mirage.logging.NewConsoleLogger(node => {
             let el = orchestrator.tree.getElementByNode(node);
             let id = el && el.id ? `#${el.id}` : "";

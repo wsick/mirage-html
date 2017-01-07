@@ -331,51 +331,54 @@ var mirage;
 })(mirage || (mirage = {}));
 var mirage;
 (function (mirage) {
-    var orchestrator;
-    function watchDOM(target) {
-        target = target || document.body;
-        orchestrator = mirage.html.NewOrchestrator(target);
-        orchestrator.start();
-    }
-    mirage.watchDOM = watchDOM;
-    function getRoots() {
-        return orchestrator.binders.map(function (binder) { return binder.getRoot(); });
-    }
-    mirage.getRoots = getRoots;
-    function getLayoutNode(obj) {
-        var el;
-        if (typeof obj === "string") {
-            el = document.getElementById(obj);
+    var html;
+    (function (html) {
+        var orchestrator;
+        function watch(target) {
+            target = target || document.body;
+            orchestrator = html.NewOrchestrator(target);
+            orchestrator.start();
         }
-        else {
-            el = obj;
+        html.watch = watch;
+        function getRoots() {
+            return orchestrator.binders.map(function (binder) { return binder.getRoot(); });
         }
-        return el ? orchestrator.tree.getNodeByElement(el) : null;
-    }
-    mirage.getLayoutNode = getLayoutNode;
-    function dumpLayoutTree(root, indent) {
-        var s = "";
-        if (!indent) {
-            s += "\n";
-            indent = "";
+        html.getRoots = getRoots;
+        function getLayoutNode(obj) {
+            var el;
+            if (typeof obj === "string") {
+                el = document.getElementById(obj);
+            }
+            else {
+                el = obj;
+            }
+            return el ? orchestrator.tree.getNodeByElement(el) : null;
         }
-        var ctor = root.constructor;
-        s += indent + ctor.name.toString() + "\n";
-        for (var walker = root.tree.walk(); walker.step();) {
-            s += dumpLayoutTree(walker.current, indent + "  ");
+        html.getLayoutNode = getLayoutNode;
+        function dumpLayoutTree(root, indent) {
+            var s = "";
+            if (!indent) {
+                s += "\n";
+                indent = "";
+            }
+            var ctor = root.constructor;
+            s += indent + ctor.name.toString() + "\n";
+            for (var walker = root.tree.walk(); walker.step();) {
+                s += dumpLayoutTree(walker.current, indent + "  ");
+            }
+            return s;
         }
-        return s;
-    }
-    mirage.dumpLayoutTree = dumpLayoutTree;
-    function enableConsoleLogger() {
-        mirage.logger = mirage.logging.NewConsoleLogger(function (node) {
-            var el = orchestrator.tree.getElementByNode(node);
-            var id = el && el.id ? "#" + el.id : "";
-            var type = node.constructor;
-            return "" + type.name + id;
-        });
-    }
-    mirage.enableConsoleLogger = enableConsoleLogger;
+        html.dumpLayoutTree = dumpLayoutTree;
+        function enableLogging() {
+            mirage.logger = mirage.logging.NewConsoleLogger(function (node) {
+                var el = orchestrator.tree.getElementByNode(node);
+                var id = el && el.id ? "#" + el.id : "";
+                var type = node.constructor;
+                return "" + type.name + id;
+            });
+        }
+        html.enableLogging = enableLogging;
+    })(html = mirage.html || (mirage.html = {}));
 })(mirage || (mirage = {}));
 var mirage;
 (function (mirage) {
