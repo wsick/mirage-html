@@ -250,6 +250,7 @@ var mirage;
                 el.style.top = slot.y + "px";
                 el.style.width = slot.width + "px";
                 el.style.height = slot.height + "px";
+                el.style.boxSizing = "border-box";
             }
             return {
                 updateSlots: function (updates) {
