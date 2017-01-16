@@ -37,6 +37,8 @@ namespace mirage.html {
             let needsUpdate = false;
             for (var i = 0; i < mutations.length; i++) {
                 let mutation = mutations[i];
+                if (HtmlNode.isDummyElement(mutation.target))
+                    continue;
                 if (mutation.type === "childList") {
                     for (var j = 0; j < mutation.addedNodes.length; j++) {
                         let el = mutation.addedNodes[j];

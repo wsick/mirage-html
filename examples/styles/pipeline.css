@@ -1,0 +1,74 @@
+.header {
+    background-color: #343434;
+}
+
+.header-image {
+    float: left;
+    margin: 16px 0 0 12px;
+}
+
+.header-title {
+    color: white;
+    font-family: "Helvetica Neue", Helvetica, Arial, serif;
+    font-size: 16pt;
+    float: left;
+    margin-left: 8px;
+    margin-top: 18px;
+}
+
+.header-title-version {
+    color: #a0a0a0;
+}
+
+.header-title-version span {
+    font-size: 55%;
+}
+
+.content {
+    background-color: #ebebeb;
+}
+
+.stage {
+    border-radius: 5px;
+    background-color: white;
+}
+
+.stage-header {
+    background-color: #414141;
+    border-radius: 5px 5px 0 0;
+}
+
+.stage-header-title {
+    color: white;
+    font-size: 10pt;
+    text-transform: uppercase;
+}
+
+.stage-header-version {
+    background-color: #69bc0d;
+    padding-top: 2px;
+    padding-bottom: 3px;
+}
+
+.stage-header-version span {
+    margin: 4px 10px 4px 10px;
+    font-size: 9pt;
+    color: white;
+}
+
+.task {
+    border-bottom: solid 1px #d9d9d9;
+    border-left: solid 6px #69bc0d;
+}
+
+.task-card-name {
+    color: #4a4a4a;
+    font-size: 12pt;
+    font-weight: 700;
+}
+
+.task-card-info {
+    font-style: italic;
+    font-size: 8pt;
+    color: #888;
+}

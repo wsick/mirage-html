@@ -182,6 +182,8 @@ var mirage;
                 var needsUpdate = false;
                 for (var i = 0; i < mutations.length; i++) {
                     var mutation = mutations[i];
+                    if (html.HtmlNode.isDummyElement(mutation.target))
+                        continue;
                     if (mutation.type === "childList") {
                         for (var j = 0; j < mutation.addedNodes.length; j++) {
                             var el = mutation.addedNodes[j];
@@ -257,9 +259,11 @@ var mirage;
                     for (var i = 0; i < updates.length; i++) {
                         var update = updates[i];
                         var node = update.node;
-                        if (!node.tree.parent)
-                            continue;
-                        updateSlot(tree.getElementByNode(update.node), update.newRect);
+                        var el = tree.getElementByNode(update.node);
+                        el.style.display = "none";
+                        if (node.tree.parent)
+                            updateSlot(tree.getElementByNode(update.node), update.newRect);
+                        el.style.display = "";
                     }
                 },
             };
@@ -297,7 +301,10 @@ var mirage;
                     var type = hash["type"];
                     if (!type)
                         return null;
+                    el.style.display = "none";
                     var node = mirage.createNodeByType(type);
+                    if (type === "html")
+                        html.HtmlNode.setElement(node, el);
                     applyHash(node, hash);
                     return node;
                 },
@@ -379,6 +386,64 @@ var mirage;
             });
         }
         html.enableLogging = enableLogging;
+    })(html = mirage.html || (mirage.html = {}));
+})(mirage || (mirage = {}));
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var mirage;
+(function (mirage) {
+    var html;
+    (function (html) {
+        var dummy;
+        var HtmlNode = (function (_super) {
+            __extends(HtmlNode, _super);
+            function HtmlNode() {
+                _super.apply(this, arguments);
+            }
+            HtmlNode.getElement = function (node) {
+                return node.getAttached("html-element");
+            };
+            HtmlNode.setElement = function (node, el) {
+                node.setAttached("html-element", el);
+                node.invalidateMeasure();
+            };
+            HtmlNode.prototype.measureOverride = function (constraint) {
+                var el = HtmlNode.getElement(this);
+                return el ? calcElementDesired(el, constraint) : new mirage.Size();
+            };
+            HtmlNode.prototype.arrangeOverride = function (arrangeSize) {
+                return arrangeSize;
+            };
+            HtmlNode.isDummyElement = function (el) {
+                return el === dummy;
+            };
+            return HtmlNode;
+        })(mirage.core.LayoutNode);
+        html.HtmlNode = HtmlNode;
+        mirage.registerNodeType("html", HtmlNode);
+        function calcElementDesired(el, constraint) {
+            if (!dummy) {
+                dummy = document.createElement('div');
+                dummy.id = "mirage-dummy";
+                dummy.style.position = "absolute";
+                dummy.style.boxSizing = "border-box";
+                dummy.style.display = "none";
+                document.body.appendChild(dummy);
+            }
+            dummy.style.width = isFinite(constraint.width) ? constraint.width + "px" : "";
+            dummy.style.height = isFinite(constraint.height) ? constraint.height + "px" : "";
+            dummy.style.display = "";
+            dummy.innerHTML = el.outerHTML;
+            var clone = dummy.firstElementChild;
+            clone.style.display = "";
+            var bounds = clone.getBoundingClientRect();
+            dummy.innerHTML = "";
+            dummy.style.display = "none";
+            return new mirage.Size(bounds.width, bounds.height);
+        }
     })(html = mirage.html || (mirage.html = {}));
 })(mirage || (mirage = {}));
 var mirage;

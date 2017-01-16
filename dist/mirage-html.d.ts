@@ -58,6 +58,15 @@ declare namespace mirage.html {
     function enableLogging(): void;
 }
 declare namespace mirage.html {
+    class HtmlNode extends core.LayoutNode {
+        static getElement(node: core.LayoutNode): HTMLElement;
+        static setElement(node: core.LayoutNode, el: HTMLElement): void;
+        protected measureOverride(constraint: ISize): ISize;
+        protected arrangeOverride(arrangeSize: ISize): ISize;
+        static isDummyElement(el: Node): boolean;
+    }
+}
+declare namespace mirage.html {
     interface IOrchestrator {
         tree: ITreeTracker;
         binders: IBinder[];
