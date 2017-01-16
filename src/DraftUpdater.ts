@@ -14,9 +14,12 @@ namespace mirage.html {
                 for (var i = 0; i < updates.length; i++) {
                     let update = updates[i];
                     let node = update.node;
-                    if (!node.tree.parent)
-                        continue;
-                    updateSlot(<HTMLElement>tree.getElementByNode(update.node), update.newRect);
+
+                    let el = <HTMLElement>tree.getElementByNode(update.node);
+                    el.style.display = "none";
+                    if (node.tree.parent)
+                        updateSlot(<HTMLElement>tree.getElementByNode(update.node), update.newRect);
+                    el.style.display = "";
                 }
             },
         };

@@ -41,7 +41,10 @@ namespace mirage.html {
                 let type = hash["type"];
                 if (!type)
                     return null;
+                (<HTMLElement>el).style.display = "none";
                 let node = mirage.createNodeByType(type);
+                if (type === "html")
+                    HtmlNode.setElement(node, <HTMLElement>el);
                 applyHash(node, hash);
                 return node;
             },
