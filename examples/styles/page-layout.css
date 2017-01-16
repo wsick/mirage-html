@@ -1,0 +1,16 @@
+.header {
+    background-color: blue;
+}
+
+.header-title {
+    color: white;
+    font-size: 20px;
+}
+
+.left-menu {
+    background-color: orange;
+}
+
+.footer {
+    font-size: 10px;
+}

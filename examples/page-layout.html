@@ -5,22 +5,23 @@
     <title>Page Layout Example</title>
     <script src="lib/mirage/dist/mirage.js"></script>
     <script src="lib/mirage-html/dist/mirage-html.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles/page-layout.css" />
 </head>
 <body onload="mirage.html.watch()" style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
 <div data-layout="html.height: window; type: grid; column-definitions: 100 *; row-definitions: 100 * auto;">
-    <div id="header" data-layout="type: panel; grid.column-span: 2;" style="background-color: darkblue;">
-        <span id="header-text" data-layout="type: panel; vertical-alignment: center;" style="color: white; font-size: 20px;">Page Layout</span>
+    <div id="header" class="header" data-layout="type: panel; grid.column-span: 2;">
+        <span id="header-text" class="header-title" data-layout="type: html; vertical-alignment: center;">Page Layout</span>
     </div>
-    <div id="left-menu" data-layout="type: stack-panel; orientation: vertical; grid.row: 1;" style="background-color: orange;">
-        <div id="menu1" data-layout="type: panel; height: 30;">Menu 1</div>
-        <div id="menu2" data-layout="type: panel; height: 30;">Menu 2</div>
-        <div id="menu3" data-layout="type: panel; height: 30;">Menu 3</div>
+    <div id="left-menu" class="left-menu" data-layout="type: stack-panel; orientation: vertical; grid.row: 1;">
+        <div id="menu1" data-layout="type: html; margin: 0 5;">Menu 1</div>
+        <div id="menu2" data-layout="type: html; margin: 0 5;">Menu 2</div>
+        <div id="menu3" data-layout="type: html; margin: 0 5;">Menu 3</div>
     </div>
     <div id="body" data-layout="type: panel; grid.row: 1; grid.column: 1;">
 
     </div>
     <div id="footer" data-layout="type: panel; grid.row: 2; grid.column-span: 2;">
-        <span data-layout="type: panel; vertical-alignment: center; horizontal-alignment: center;" style="font-size: 10px;">&copy; WickedSick 2016</span>
+        <span class="footer" data-layout="type: html; vertical-alignment: center; horizontal-alignment: center;">&copy; WickedSick 2016</span>
     </div>
 </div>
 </body>
