@@ -65,6 +65,11 @@ namespace mirage.html {
                 for (let cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
                     deregister(cur, true, null, null);
                 }
+            } else {
+                // drop 'parent' from children
+                for (let walker = node.tree.walk(); walker.step();) {
+                    walker.current.setParent(null);
+                }
             }
 
             let parentNode = node.tree.parent;

@@ -138,7 +138,7 @@ var mirage;
                 for (var i = 0; i < binders.length; i++) {
                     var index = destroyedRoots.indexOf(binders[i].getRoot());
                     if (index > -1) {
-                        destroyBinder(index);
+                        destroyBinder(i);
                         i--;
                     }
                 }
@@ -565,6 +565,11 @@ var mirage;
                 if (!isUntagged) {
                     for (var cur = el.firstElementChild; !!cur; cur = cur.nextElementSibling) {
                         deregister(cur, true, null, null);
+                    }
+                }
+                else {
+                    for (var walker = node.tree.walk(); walker.step();) {
+                        walker.current.setParent(null);
                     }
                 }
                 var parentNode = node.tree.parent;

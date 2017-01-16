@@ -80,7 +80,7 @@ namespace mirage.html {
             for (var i = 0; i < binders.length; i++) {
                 let index = destroyedRoots.indexOf(binders[i].getRoot());
                 if (index > -1) {
-                    destroyBinder(index);
+                    destroyBinder(i);
                     i--;
                 }
             }
