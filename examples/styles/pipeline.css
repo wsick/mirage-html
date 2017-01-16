@@ -46,6 +46,8 @@
 
 .stage-header-version {
     background-color: #69bc0d;
+    padding-top: 2px;
+    padding-bottom: 3px;
 }
 
 .stage-header-version span {
