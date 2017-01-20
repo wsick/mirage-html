@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset='UTF-8'/>
+    <title>Scrollable Page Example</title>
+    <script src="lib/mirage/dist/mirage.js"></script>
+    <script src="lib/mirage-html/dist/mirage-html.js"></script>
+</head>
+<body onload="mirage.html.watch()">
+<div data-layout="html.height: infinite; type: stack-panel; orientation: vertical;">
+    <div data-layout="type: panel; height: 200;" style="background-color: red;"></div>
+    <div data-layout="type: panel; height: 200;" style="background-color: orange;"></div>
+    <div data-layout="type: panel; height: 200;" style="background-color: yellow;"></div>
+    <div data-layout="type: panel; height: 200;" style="background-color: green;"></div>
+    <div data-layout="type: panel; height: 200;" style="background-color: blue;"></div>
+</div>
+</body>
+</html>
