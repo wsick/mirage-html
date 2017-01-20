@@ -24,6 +24,8 @@ namespace mirage.html {
             let htmlHeight = root.getAttached("html.height");
             if (htmlHeight === "window")
                 return new Size(window.innerWidth, window.innerHeight - 20);
+            if (htmlHeight === "infinite")
+                return new Size(window.innerWidth, Number.POSITIVE_INFINITY);
             return new Size(element.scrollWidth, element.scrollHeight);
         }
 
