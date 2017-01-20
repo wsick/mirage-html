@@ -48,6 +48,8 @@ var mirage;
                 var htmlHeight = root.getAttached("html.height");
                 if (htmlHeight === "window")
                     return new mirage.Size(window.innerWidth, window.innerHeight - 20);
+                if (htmlHeight === "infinite")
+                    return new mirage.Size(window.innerWidth, Number.POSITIVE_INFINITY);
                 return new mirage.Size(element.scrollWidth, element.scrollHeight);
             }
             return {
@@ -301,7 +303,6 @@ var mirage;
                     var type = hash["type"];
                     if (!type)
                         return null;
-                    el.style.display = "none";
                     var node = mirage.createNodeByType(type);
                     if (type === "html")
                         html.HtmlNode.setElement(node, el);
