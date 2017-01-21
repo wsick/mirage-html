@@ -1,6 +1,6 @@
 {
-  "name": "mirage-html",
-  "version": "0.1.0",
+  "name": "mirage.html",
+  "version": "0.1.1",
   "description": "HTML binding adapter for mirage",
   "main": "gulpfile.js",
   "directories": {
