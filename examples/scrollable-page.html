@@ -5,7 +5,10 @@
     <title>Scrollable Page Example</title>
     <script src="lib/mirage-html/dist/mirage-html.js"></script>
 </head>
-<body onload="mirage.html.watch()">
+<body>
+<script>
+    mirage.html.watch();
+</script>
 <div data-layout="html.height: infinite; type: stack-panel; orientation: vertical;">
     <div data-layout="type: panel; height: 200;" style="background-color: red;"></div>
     <div data-layout="type: panel; height: 200;" style="background-color: orange;"></div>

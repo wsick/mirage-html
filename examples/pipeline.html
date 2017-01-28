@@ -6,7 +6,10 @@
     <script src="lib/mirage-html/dist/mirage-html.js"></script>
     <link rel="stylesheet" type="text/css" href="styles/pipeline.css" />
 </head>
-<body onload="mirage.html.watch()" style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
+<body style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
+<script>
+    mirage.html.watch();
+</script>
 <div data-layout="html.height: window; type: grid; row-definitions: 60 54 *;">
     <div id="header" class="header" data-layout="type: panel; grid.row: 0;">
         <img src="images/rocket.png" class="header-image" />

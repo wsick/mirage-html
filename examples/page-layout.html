@@ -6,7 +6,10 @@
     <script src="lib/mirage-html/dist/mirage-html.js"></script>
     <link rel="stylesheet" type="text/css" href="styles/page-layout.css" />
 </head>
-<body onload="mirage.html.watch()" style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
+<body style="margin: 0; font-family: Arial, Helvetica, sans-serif;">
+<script>
+    mirage.html.watch();
+</script>
 <div data-layout="html.height: window; type: grid; column-definitions: 100 *; row-definitions: 100 * auto;">
     <div id="header" class="header" data-layout="type: panel; grid.column-span: 2;">
         <span id="header-text" class="header-title" data-layout="type: html; vertical-alignment: center;">Page Layout</span>
